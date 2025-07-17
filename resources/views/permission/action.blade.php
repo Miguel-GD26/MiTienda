@@ -67,7 +67,7 @@
                     </div>
                     <div class="card-body p-4">
                         <div class="text-center mb-3">
-                            <img src="{{ asset('assets/img/permisos.gif') }}" class="img-fluid" alt="Gestión de permisos" style="max-height: 150px;">
+                            <img src="{{ asset('assets/img/ayuda.gif') }}" class="img-fluid" alt="Gestión de permisos" style="max-height: 150px;">
                         </div>
                         <h6 class="text-muted"><i class="fa-solid fa-unlock-keyhole text-success me-2"></i>¿Qué es un Permiso?</h6>
                         <p class="text-muted small">

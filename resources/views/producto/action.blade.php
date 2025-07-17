@@ -114,14 +114,32 @@
                                 <div class="col-md-6 mb-3">
                                     <label for="precio" class="form-label">Precio <span class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" step="0.01" class="form-control @error('precio') is-invalid @enderror" name="precio" id="precio" value="{{ old('precio', $producto->precio ?? '0.00') }}" required>
+                                        <span class="input-group-text">S/.</span>
+                                        <input type="number"
+                                            step="0.01"
+                                            min="0"
+                                            class="form-control @error('precio') is-invalid @enderror"
+                                            name="precio"
+                                            id="precio"
+                                            value="{{ old('precio', $producto->precio ?? '0.00') }}"
+                                            required>
+
+                                        <!-- <input type="number" step="0.01" class="form-control @error('precio') is-invalid @enderror" name="precio" id="precio" value="{{ old('precio', $producto->precio ?? '0.00') }}" required> -->
                                     </div>
                                     @error('precio') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="stock" class="form-label">Stock</label>
-                                    <input type="number" class="form-control @error('stock') is-invalid @enderror" name="stock" id="stock" value="{{ old('stock', $producto->stock ?? '') }}" placeholder="Dejar vacío si no aplica">
+                                    <!-- <input type="number" class="form-control @error('stock') is-invalid @enderror" name="stock" id="stock" value="{{ old('stock', $producto->stock ?? '') }}" placeholder="Dejar vacío si no aplica"> -->
+                                    <input type="number" 
+                                        class="form-control @error('stock') is-invalid @enderror" 
+                                        name="stock" 
+                                        id="stock" 
+                                        value="{{ old('stock', $producto->stock ?? '0') }}" 
+                                        placeholder="Dejar vacío si no aplica"
+                                        min="0" 
+                                        step="1">
+
                                     @error('stock') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>

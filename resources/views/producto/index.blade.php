@@ -91,12 +91,13 @@
                                 </td>
                                 <td>
                                     <div class="fw-bold">{{ $producto->nombre }}</div>
-                                    <small class="text-muted d-block d-md-none">{{ $producto->categoria->nombre ?? 'N/A' }}</small>
+                                    <!-- <small class="text-muted d-block d-md-none">{{ $producto->categoria->nombre ?? 'N/A' }}</small> -->
                                 </td>
                                 @if(auth()->user()->hasRole('super_admin'))
                                     <td class="small text-muted">{{ $producto->empresa->nombre ?? 'N/A' }}</td>
                                 @endif
-                                <td class="d-none d-md-table-cell">{{ $producto->categoria->nombre ?? 'N/A' }}</td>
+                                <td>{{ $producto->categoria->nombre ?? 'N/A' }}</td>
+                                <!-- <td class="d-none d-md-table-cell">{{ $producto->categoria->nombre ?? 'N/A' }}</td> -->
                                 <td class="text-end fw-bold text-success">S/.{{ number_format($producto->precio, 2) }}</td>
                                 <td class="text-center">
                                     <span class="badge {{ ($producto->stock ?? 0) > 0 ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis' }} rounded-pill">

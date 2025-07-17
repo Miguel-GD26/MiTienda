@@ -47,20 +47,31 @@ class CategoriaController extends Controller
         $this->authorize('categoria-create');
         $user = Auth::user();
 
-        // Para Super Admin, se requiere seleccionar una empresa
         if ($user->hasRole('super_admin')) {
-             $request->validate(['empresa_id' => 'required|exists:empresas,id']);
-             $empresa_id = $request->empresa_id;
+            $request->validate([
+                'empresa_id' => 'required|exists:empresas,id'
+            ], [
+                'empresa_id.required' => 'Debe seleccionar una empresa.',
+                'empresa_id.exists' => 'La empresa seleccionada no es válida.',
+            ]);
+            $empresa_id = $request->empresa_id;
         } else {
-             $empresa_id = $user->empresa_id;
-             if (!$empresa_id) {
+            $empresa_id = $user->empresa_id;
+            if (!$empresa_id) {
                 return back()->with('error', 'No tienes una empresa asignada para crear categorías.');
             }
         }
-        
+
         $request->validate([
             'nombre' => ['required', 'string', 'max:50', Rule::unique('categorias')->where('empresa_id', $empresa_id)],
             'descripcion' => 'nullable|string|max:255',
+        ], [
+            'nombre.required' => 'El nombre es obligatorio.',
+            'nombre.string' => 'El nombre debe ser una cadena de texto.',
+            'nombre.max' => 'El nombre no debe superar los 50 caracteres.',
+            'nombre.unique' => 'Ya existe una categoría con este nombre en la empresa.',
+            'descripcion.string' => 'La descripción debe ser un texto.',
+            'descripcion.max' => 'La descripción no debe superar los 255 caracteres.',
         ]);
 
         Categoria::create([
@@ -71,6 +82,7 @@ class CategoriaController extends Controller
 
         return redirect()->route('categorias.index')->with('mensaje', 'Categoría registrada satisfactoriamente.');
     }
+
 
     public function edit(Categoria $categoria)
     {

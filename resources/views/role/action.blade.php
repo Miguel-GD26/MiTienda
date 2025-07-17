@@ -99,7 +99,7 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="text-center mb-3">
-                        <img src="{{ asset('assets/img/roles.gif') }}" class="img-fluid" alt="Gestión de roles y permisos" style="max-height: 150px;">
+                        <img src="{{ asset('assets/img/ayuda.gif') }}" class="img-fluid" alt="Gestión de roles y permisos" style="max-height: 150px;">
                     </div>
                     
                     <h6 class="text-muted"><i class="fa-solid fa-shield-halved text-success me-2"></i>¿Qué es un Rol?</h6>

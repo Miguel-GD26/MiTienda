@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Empresa;
-use App\Models\Cliente; // Asegúrate de importar el modelo Cliente
+use App\Models\Cliente;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -15,19 +15,11 @@ use Illuminate\Support\Str;
 
 class RegisterController extends Controller
 {
-    /**
-     * Muestra el formulario de registro.
-     */
     public function showRegistroForm()
     {
         return view('autenticacion.registro');
     }
 
-    /**
-     * Procesa la petición de registro.
-     * He cambiado el nombre del método a 'store' para seguir convenciones.
-     * Asegúrate de que tu ruta apunte a este método.
-     */
     public function registrar (Request $request)
     {
         // --- 1. VALIDACIÓN ---
@@ -41,10 +33,15 @@ class RegisterController extends Controller
         if ($request->input('tipo_usuario') === 'empresa') {
             $request->validate([
                 'empresa_nombre' => ['required', 'string', 'max:255', 'unique:empresas,nombre'],
-                'empresa_telefono_whatsapp' => ['required', 'string', 'max:20'],
+                'empresa_telefono_whatsapp' => ['required', 'digits:9'],
                 'empresa_rubro' => ['required', 'string', 'max:255'],
             ]);
+        } else {
+            $request->validate([
+                'cliente_telefono' => ['required', 'digits:9'],
+            ]);
         }
+
 
         // --- 2. CREACIÓN (USANDO TRANSACCIÓN) ---
         try {
@@ -72,10 +69,6 @@ class RegisterController extends Controller
                 $user->assignRole('admin');
                 
             } else { // Si es 'cliente'
-                // ===============================================
-                //          LÓGICA ACTUALIZADA PARA CLIENTES
-                // ===============================================
-                // Creamos el registro en la tabla `clientes` y lo vinculamos al User
                 Cliente::create([
                     'nombre' => $request->input('name'),
                     'telefono' => $request->input('cliente_telefono'), // Campo opcional
@@ -91,11 +84,7 @@ class RegisterController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            // Durante el desarrollo, es útil ver el error real.
-            // En producción, deberías loguearlo y mostrar un mensaje amigable.
-            // dd($e); 
-            
+             
             return back()->with('error', 'Ocurrió un error durante el registro. Por favor, inténtelo de nuevo.')
                          ->withInput();
         }

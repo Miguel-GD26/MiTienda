@@ -2,7 +2,7 @@
     <div class="container-fluid">
         <!-- Logo a la izquierda -->
         <a href="{{ route('welcome') }}" class="navbar-brand px-lg-4 m-0">
-            <img src="{{ asset('assets/img/MiTienda2.png') }}" alt="Logo" style="height: 60px;">
+            <img src="{{ asset('assets/img/MiTienda2.png') }}" alt="Logo" style="height: 80px;">
         </a>
 
         <!-- Botón para móviles -->
@@ -60,7 +60,8 @@
                             <i class="fa-solid fa-circle-user"></i> {{ Auth::user()->name }}
                         </a>
                         <div class="dropdown-menu dropdown-menu-right text-capitalize">
-                            <a href="{{ route('perfil.edit') }}" class="dropdown-item">Mi Perfil</a>
+                            <a href="{{ route('perfil.edit') }}" class="dropdown-item">
+                                <i class="fa-solid fa-user-cog me-2"></i> Mi Perfil</a>
                             @if(auth()->user()->hasRole('cliente'))
                             <li>
                                 <a class="dropdown-item" href="{{ route('pedidos.index') }}">

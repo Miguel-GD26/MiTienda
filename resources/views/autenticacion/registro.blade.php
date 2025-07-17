@@ -18,12 +18,10 @@
     <div class="card-body">
       <div class="row g-4 align-items-center mt-0">
 
-        <!-- Columna de la imagen -->
         <div class="col-12 col-md-4 text-center d-none d-md-block">
           <img src="{{ asset('assets/img/usuario.gif') }}" alt="Icono de registro" class="img-fluid">
         </div>
 
-        <!-- Columna del formulario -->
         <div class="col-12 col-md-8">
           <form action="{{ route('registro.store') }}" method="POST">
             @csrf
@@ -58,11 +56,11 @@
             <div x-show="tipoUsuario !== ''" x-transition>
               <hr>
               
-              {{-- Para ser explícito, aquí está el resto: --}}
               <h5 class="mb-3">Datos de tu cuenta</h5>
+              <p class="text-muted small">Los campos con <span class="text-danger">*</span> son obligatorios.</p>
               
               <div class="mb-3">
-                <label for="name" class="form-label">Tu nombre completo</label>
+                <label for="name" class="form-label">Nombre completo<span class="text-danger">*</span></label>
                 <div class="input-group">
                   <span class="input-group-text"><i class="fas fa-user"></i></span>
                   <input id="name" type="text" name="name" value="{{ old('name') }}" class="form-control @error('name') is-invalid @enderror" placeholder="Ej. Juan Pérez" required>
@@ -73,7 +71,7 @@
               </div>
 
               <div class="mb-3">
-                <label for="email" class="form-label">Tu correo electrónico (para iniciar sesión)</label>
+                <label for="email" class="form-label">Correo electrónico<span class="text-danger">*</span></label>
                 <div class="input-group">
                   <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                   <input id="email" type="email" name="email" value="{{ old('email') }}" class="form-control @error('email') is-invalid @enderror" placeholder="ejemplo@correo.com" required>
@@ -85,27 +83,53 @@
 
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label for="password" class="form-label">Contraseña</label>
+                  <label for="password" class="form-label">Contraseña<span class="text-danger">*</span></label>
                   <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                    <input id="password" type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Mínimo 8 caracteres" required>
+                    <!-- <span class="input-group-text"><i class="fas fa-lock"></i></span> -->
+                    <!-- <input id="password" type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Mínimo 8 caracteres" required> -->
+                    <div x-data="{ showPassword: false }">
+                      <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input :type="showPassword ? 'text' : 'password'" id="password" name="password"
+                              class="form-control @error('password') is-invalid @enderror"
+                              placeholder="Mínimo 8 caracteres" required>
+                        <button type="button" class="btn btn-outline-secondary" @click="showPassword = !showPassword">
+                          <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                        </button>
+                      </div>
+                      @error('password')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                      @enderror
+                    </div>
+
                   </div>
                   @error('password')
                     <div class="text-danger small mt-1">{{ $message }}</div>
                   @enderror
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label for="password_confirmation" class="form-label">Confirmar contraseña</label>
+                  <label for="password_confirmation" class="form-label">Confirmar contraseña<span class="text-danger">*</span></label>
                   <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                    <input id="password_confirmation" type="password" name="password_confirmation" class="form-control" placeholder="Repita la contraseña" required>
+                    <!-- <span class="input-group-text"><i class="fas fa-lock"></i></span> -->
+                    <!-- <input id="password_confirmation" type="password" name="password_confirmation" class="form-control" placeholder="Repita la contraseña" required> -->
+                    <div x-data="{ showPassword2: false }">
+                      <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input :type="showPassword2 ? 'text' : 'password'" id="password_confirmation" name="password_confirmation"
+                              class="form-control" placeholder="Repita la contraseña" required>
+                        <button type="button" class="btn btn-outline-secondary" @click="showPassword2 = !showPassword2">
+                          <i :class="showPassword2 ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
 
               <div x-show="tipoUsuario === 'cliente'" x-transition>
                 <div class="mb-3">
-                  <label for="cliente_telefono" class="form-label">Tu teléfono (Opcional)</label>
+                  <label for="cliente_telefono" class="form-label">Teléfono<span class="text-danger">*</span></label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-phone"></i></span>
                     <input id="cliente_telefono" type="text" name="cliente_telefono" value="{{ old('cliente_telefono') }}" class="form-control @error('cliente_telefono') is-invalid @enderror" placeholder="Número de contacto">
@@ -121,7 +145,7 @@
                 <h5 class="mb-3">Datos de tu Empresa</h5>
 
                 <div class="mb-3">
-                  <label for="empresa_nombre" class="form-label">Nombre de la Empresa</label>
+                  <label for="empresa_nombre" class="form-label">Nombre de la Empresa<span class="text-danger">*</span></label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-building"></i></span>
                     <input id="empresa_nombre" type="text" name="empresa_nombre" value="{{ old('empresa_nombre') }}" class="form-control @error('empresa_nombre') is-invalid @enderror" placeholder="Ej. Mi Tienda Fantástica">
@@ -132,7 +156,7 @@
                 </div>
                 
                 <div class="mb-3">
-                    <label for="empresa_telefono_whatsapp" class="form-label">Teléfono / WhatsApp de la Empresa</label>
+                    <label for="empresa_telefono_whatsapp" class="form-label">WhatsApp de la Empresa<span class="text-danger">*</span></label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fab fa-whatsapp"></i></span>
                         <input id="empresa_telefono_whatsapp" type="text" name="empresa_telefono_whatsapp" value="{{ old('empresa_telefono_whatsapp') }}" class="form-control @error('empresa_telefono_whatsapp') is-invalid @enderror" placeholder="Número de contacto de la empresa">
@@ -143,7 +167,7 @@
                 </div>
                 
                 <div class="mb-4">
-                  <label for="empresa_rubro" class="form-label">Rubro de la Empresa</label>
+                  <label for="empresa_rubro" class="form-label">Rubro de la Empresa<span class="text-danger">*</span></label>
                   <div class="input-group">
                       <span class="input-group-text"><i class="fas fa-tag"></i></span>
                       

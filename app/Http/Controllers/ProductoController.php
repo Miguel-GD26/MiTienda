@@ -62,43 +62,73 @@ class ProductoController extends Controller
             $categorias = Categoria::with('empresa')->orderBy('nombre')->get();
 
             if ($empresas->isEmpty()) {
-                return redirect()->route('usuarios.create')->with('warning', '¡Atención! Para crear un producto, primero debe registrar al menos una empresa.');
+                return redirect()->route('usuarios.create')
+                    ->with('warning', '¡Atención! Para crear un producto, primero debe registrar al menos una empresa.');
             }
-        } else { // Si es Admin de Empresa
+        } else {
+            // Validación para Admin de Empresa
             if (!$user->empresa_id) {
-                return redirect()->route('productos.index')->with('error', 'No tienes una empresa asignada para crear productos.');
+                return redirect()->route('productos.index')
+                    ->with('error', 'No tienes una empresa asignada para crear productos.');
             }
-            $categorias = Categoria::where('empresa_id', $user->empresa_id)->orderBy('nombre')->get();
-            
+
+            $categorias = Categoria::where('empresa_id', $user->empresa_id)
+                ->orderBy('nombre')->get();
+
             if ($categorias->isEmpty()) {
-                return redirect()->route('categorias.create')->with('warning', '¡Atención! Para crear un producto, primero debe registrar al menos una categoría.');
+                return redirect()->route('categorias.create')
+                    ->with('warning', '¡Atención! Para crear un producto, primero debe registrar al menos una categoría.');
             }
         }
-        
+
         return view('producto.action', compact('categorias', 'empresas'));
     }
 
-    /**
-     * Almacena un nuevo producto en la base de datos, incluyendo la imagen en Cloudinary.
-     */
+
     public function store(Request $request)
     {
         $this->authorize('producto-create');
         $user = Auth::user();
 
         $empresa_id = $user->hasRole('super_admin') ? $request->empresa_id : $user->empresa_id;
+
+        // Validación para super_admin
         if ($user->hasRole('super_admin')) {
-            $request->validate(['empresa_id' => 'required|exists:empresas,id']);
+            $request->validate([
+                'empresa_id' => 'required|exists:empresas,id'
+            ], [
+                'empresa_id.required' => 'Debe seleccionar una empresa.',
+                'empresa_id.exists' => 'La empresa seleccionada no existe.',
+            ]);
         }
-        
+
         $request->validate([
-            'nombre' => ['required', 'string', 'max:255', Rule::unique('productos')->where('empresa_id', $empresa_id)],
+            'nombre' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('productos')->where(fn ($query) => $query->where('empresa_id', $empresa_id)),
+            ],
             'precio' => 'required|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
-            'categoria_id' => ['required', Rule::exists('categorias', 'id')->where('empresa_id', $empresa_id)],
+            'categoria_id' => [
+                'required',
+                Rule::exists('categorias', 'id')->where('empresa_id', $empresa_id),
+            ],
             'imagen_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ], [
+            'nombre.required' => 'El nombre del producto es obligatorio.',
+            'nombre.unique' => 'Ya existe un producto con este nombre en la empresa.',
+            'precio.required' => 'El precio es obligatorio.',
+            'precio.numeric' => 'El precio debe ser un número.',
+            'stock.integer' => 'El stock debe ser un número entero.',
+            'categoria_id.required' => 'Debe seleccionar una categoría.',
+            'categoria_id.exists' => 'La categoría no es válida o no pertenece a esta empresa.',
+            'imagen_url.image' => 'El archivo debe ser una imagen.',
+            'imagen_url.mimes' => 'Solo se permiten imágenes JPEG, PNG, JPG, GIF o WEBP.',
+            'imagen_url.max' => 'La imagen no debe superar los 2MB.',
         ]);
-        
+
         $productData = $request->except('imagen_url');
         $productData['empresa_id'] = $empresa_id;
 
@@ -114,9 +144,6 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('mensaje', 'Producto creado con éxito.');
     }
 
-    /**
-     * Muestra el formulario para editar un producto.
-     */
     public function edit(Producto $producto)
     {
         $this->authorize('producto-edit', $producto);
@@ -137,20 +164,37 @@ class ProductoController extends Controller
         return view('producto.action', compact('producto', 'categorias', 'empresas'));
     }
 
-    /**
-     * Actualiza un producto existente, gestionando el cambio de imagen en Cloudinary.
-     */
+
     public function update(Request $request, Producto $producto)
     {
         $this->authorize('producto-edit', $producto);
         $empresa_id = $producto->empresa_id;
 
         $request->validate([
-            'nombre' => ['required', 'string', 'max:255', Rule::unique('productos')->where('empresa_id', $empresa_id)->ignore($producto->id)],
+            'nombre' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('productos')->where(fn ($query) => $query->where('empresa_id', $empresa_id))->ignore($producto->id),
+            ],
             'precio' => 'required|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
-            'categoria_id' => ['required', Rule::exists('categorias', 'id')->where('empresa_id', $empresa_id)],
+            'categoria_id' => [
+                'required',
+                Rule::exists('categorias', 'id')->where('empresa_id', $empresa_id),
+            ],
             'imagen_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ], [
+            'nombre.required' => 'El nombre del producto es obligatorio.',
+            'nombre.unique' => 'Ya existe otro producto con ese nombre en la empresa.',
+            'precio.required' => 'El precio es obligatorio.',
+            'precio.numeric' => 'El precio debe ser un número.',
+            'stock.integer' => 'El stock debe ser un número entero.',
+            'categoria_id.required' => 'Debe seleccionar una categoría.',
+            'categoria_id.exists' => 'La categoría no es válida o no pertenece a esta empresa.',
+            'imagen_url.image' => 'El archivo debe ser una imagen.',
+            'imagen_url.mimes' => 'Solo se permiten imágenes JPEG, PNG, JPG, GIF o WEBP.',
+            'imagen_url.max' => 'La imagen no debe superar los 2MB.',
         ]);
 
         $productData = $request->except('imagen_url');
@@ -159,6 +203,7 @@ class ProductoController extends Controller
             if ($producto->imagen_url) {
                 cloudinary()->uploadApi()->destroy($producto->imagen_url);
             }
+
             $uploadedFile = cloudinary()->uploadApi()->upload($request->file('imagen_url')->getRealPath(), [
                 'folder' => 'productos'
             ]);
@@ -170,9 +215,6 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('mensaje', 'Producto actualizado con éxito.');
     }
 
-    /**
-     * Elimina un producto y su imagen asociada en Cloudinary.
-     */
 
     public function destroy(Producto $producto)
     {

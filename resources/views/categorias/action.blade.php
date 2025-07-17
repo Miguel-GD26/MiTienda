@@ -104,7 +104,7 @@
                     <div class="card-body p-4">
                         <div class="text-center mb-3">
                             {{-- LÍNEA CORREGIDA --}}
-                            <img src="{{ asset('assets/img/categorias.gif') }}"
+                            <img src="{{ asset('assets/img/ayuda.gif') }}"
                                  class="img-fluid" 
                                  alt="Ilustración de organización" 
                                  style="max-height: 150px;">
