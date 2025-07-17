@@ -9,8 +9,11 @@
 
     // 2. Comprobar si el usuario tiene una empresa y esa empresa tiene un logo
     if ($user && $user->empresa && $user->empresa->logo_url) {
-        // Si hay un logo de empresa, se usa ese.
+        // Si hay un logo personalizado, se usa ese.
         $logoPath = cloudinary()->image($user->empresa->logo_url)->toUrl();
+    } else {
+        // Si no hay logo, usar uno por defecto.
+        $logoPath = asset('assets/img/MiTienda.png');
     }
     
     
