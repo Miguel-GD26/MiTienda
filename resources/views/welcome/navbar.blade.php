@@ -2,7 +2,7 @@
     <div class="container-fluid">
         <!-- Logo a la izquierda -->
         <a href="{{ route('welcome') }}" class="navbar-brand px-lg-4 m-0">
-            <img src="{{ asset('assets/img/MiTienda.png') }}" alt="Logo" style="height: 60px;">
+            <img src="{{ asset('assets/img/MiTienda2.png') }}" alt="Logo" style="height: 60px;">
         </a>
 
         <!-- Botón para móviles -->
