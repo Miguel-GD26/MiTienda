@@ -17,7 +17,6 @@ class CartController extends Controller
         $cartItems = $cart ? $cart->items : collect();
         
         $cartTotal = $cartItems->sum(function ($item) {
-            // Asegurarse de que el producto exista antes de calcular.
             return optional($item->producto)->precio * $item->cantidad ?? 0;
         });
 
@@ -134,7 +133,7 @@ class CartController extends Controller
                 }
 
                 $cliente->empresas()->syncWithoutDetaching($empresa->id);
-                $cart->items()->delete(); // Vaciar carrito de la BD
+                $cart->items()->delete();
                 return $nuevoPedido;
             });
 

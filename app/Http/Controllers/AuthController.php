@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\RedirectResponse; // Importante para el type-hinting
+use Illuminate\Http\RedirectResponse;
 
 class AuthController extends Controller
 {
@@ -29,13 +29,12 @@ class AuthController extends Controller
                 return redirect()->intended('dashboard');
             }
 
-            // 2. Clientes van a la tienda de la que vinieron o a la página principal.
             if ($user->hasRole('cliente')) {
                 if (session()->has('url.store_before_login')) {
                     $url = session()->pull('url.store_before_login');
                     return redirect($url);
                 }
-                // Si no hay URL guardada, van al welcome.
+                
                 return redirect()->route('welcome');
             }
             

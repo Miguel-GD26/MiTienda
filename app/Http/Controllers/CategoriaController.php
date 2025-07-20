@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categoria;
-use App\Models\Empresa; // 1. Importar Empresa para la vista de Super Admin
+use App\Models\Empresa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -37,7 +37,7 @@ class CategoriaController extends Controller
 
     public function create()
     {
-        $this->authorize('categoria-create'); // Autorización añadida
+        $this->authorize('categoria-create');
         $empresas = auth()->user()->hasRole('super_admin') ? Empresa::all() : collect();
         return view('categorias.action', compact('empresas'));
     }
@@ -110,7 +110,7 @@ class CategoriaController extends Controller
     {
         $this->authorize('categoria-delete', $categoria);
         $nombreCategoria = $categoria->nombre;
-        // Lógica para comprobar si la categoría está en uso antes de borrar
+        
         if ($categoria->productos()->exists()) {
             return redirect()->route('categorias.index')->with('warning', 'No se puede eliminar la categoría "'.$nombreCategoria.'" porque tiene productos asociados.');
         }

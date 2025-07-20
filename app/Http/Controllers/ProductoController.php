@@ -235,11 +235,9 @@ class ProductoController extends Controller
         $user = Auth::user();
 
         if ($user && $user->cart) {
-            // Obtenemos los items y los indexamos por producto_id para búsqueda rápida.
             return $user->cart->items->keyBy('producto_id');
         }
 
-        // Si no hay usuario o no tiene carrito, devolvemos una colección vacía.
         return collect();
     }
 
@@ -248,14 +246,13 @@ class ProductoController extends Controller
         $productos = $empresa->productos()->with('categoria')->paginate(9);
         $categorias = $empresa->categorias()->whereHas('productos')->get();
         
-        // MODIFICADO: Usamos nuestro nuevo método para obtener los items del carrito
         $cartItems = $this->getCartItemsForView();
 
         return view('tienda.index', [
             'tienda' => $empresa,
             'productos' => $productos,
             'categorias' => $categorias,
-            'cartItems' => $cartItems, // Pasamos los datos correctos
+            'cartItems' => $cartItems,
         ]);
     }
 
@@ -268,7 +265,6 @@ class ProductoController extends Controller
         $productos = $categoria->productos()->paginate(9);
         $categorias = $empresa->categorias()->withCount('productos')->whereHas('productos')->get();
         
-        // MODIFICADO: Usamos nuestro nuevo método para obtener los items del carrito
         $cartItems = $this->getCartItemsForView();
 
         return view('tienda.index', [
@@ -276,7 +272,7 @@ class ProductoController extends Controller
             'productos' => $productos,
             'categorias' => $categorias,
             'categoriaActual' => $categoria,
-            'cartItems' => $cartItems, // Pasamos los datos correctos
+            'cartItems' => $cartItems, 
         ]);
     }
 
@@ -293,14 +289,12 @@ class ProductoController extends Controller
 
         $categoriasParaFiltro = $empresa->categorias()->whereHas('productos')->get();
 
-        // MODIFICADO: Usamos nuestro nuevo método para obtener los items del carrito
         $cartItems = $this->getCartItemsForView();
 
-        // MODIFICADO: Pasamos $cartItems a la vista parcial
         $productsHtml = view('tienda.producto', [
             'productos' => $productos,
             'tienda' => $empresa,
-            'cartItems' => $cartItems, // Pasamos los datos correctos a la vista parcial
+            'cartItems' => $cartItems,
         ])->render();
 
         return response()->json([

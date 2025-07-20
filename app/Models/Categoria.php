@@ -3,8 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
-use Illuminate\Support\Facades\Auth; // Importante
+use Illuminate\Support\Facades\Auth;
 
 class Categoria extends Model
 {
@@ -24,7 +23,6 @@ class Categoria extends Model
     {
         parent::boot();
 
-        // Solo aplica si el usuario está autenticado y tiene empresa asignada
         if (Auth::check() && Auth::user()->empresa_id) {
             static::addGlobalScope('empresa', function ($builder) {
                 $builder->where('empresa_id', Auth::user()->empresa_id);

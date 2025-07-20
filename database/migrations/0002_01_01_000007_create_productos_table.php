@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('descripcion')->nullable();
             $table->decimal('precio', 10, 2);
             $table->integer('stock')->default(0);
-            $table->string('imagen_url')->nullable(); // Public ID de Cloudinary
+            $table->string('imagen_url')->nullable();
             $table->foreignId('empresa_id')->constrained('empresas')->onDelete('cascade');
             $table->timestamps();
         });

@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('productos', function (Blueprint $table) {
-            // Definimos la nueva columna para el precio de oferta.
-            $table->decimal('precio_oferta', 8, 2) // Usamos 'decimal' para dinero. 8 dígitos en total, 2 decimales.
-                  ->nullable()                     // MUY IMPORTANTE: La hacemos 'nullable' para que los productos existentes no den error.
-                  ->after('precio');              // Opcional, pero coloca la columna justo después de 'precio' en la BD, lo cual es ordenado.
+
+            $table->decimal('precio_oferta', 8, 2) 
+                  ->nullable()                     
+                  ->after('precio');        
         
         });
     }

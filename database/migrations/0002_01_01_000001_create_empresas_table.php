@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('empresas', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->string('slug')->unique(); // para subdominios
+            $table->string('slug')->unique();
             $table->string('rubro')->nullable();
             $table->string('telefono_whatsapp')->nullable();
             $table->timestamps();

@@ -61,10 +61,12 @@
                 </div>
                 
                 <div class="d-grid">
-                    <a href="{{ route('login.google.redirect') }}" class="btn btn-outline-secondary">
-                        <i class="fab fa-google me-2"></i> Continuar con Google
+                    <a href="{{ route('login.google.redirect') }}" class="btn btn-light border d-flex align-items-center justify-content-center gap-2 shadow-sm" style="height: 45px;">
+                        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" style="width: 20px; height: 20px;">
+                        <span>Continuar con Google</span>
                     </a>
                 </div>
+
 
                 <div class="text-center mt-5">
                     <p class="text-muted mb-0">¿No tienes una cuenta?

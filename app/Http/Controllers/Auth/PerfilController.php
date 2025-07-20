@@ -34,32 +34,30 @@ class PerfilController extends Controller
     {
         $user = Auth::user();
 
-        // --- VALIDACIÓN DE DATOS ---
         $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
         ];
 
         if (is_null($user->provider_name)) {
-            $rules['password'] = ['nullable', 'confirmed', Password::defaults()]; // Usamos las reglas por defecto de Laravel.
+            $rules['password'] = ['nullable', 'confirmed', Password::defaults()];
         }
 
         
-        // Reglas para admin/super_admin con empresa
         if ($user->hasRole(['super_admin', 'admin']) && $user->empresa) {
             $rules['empresa_nombre'] = ['required', 'string', 'max:255', Rule::unique('empresas', 'nombre')->ignore($user->empresa_id)];
             $rules['empresa_rubro'] = 'nullable|string|max:255';
             $rules['empresa_telefono_whatsapp'] = 'nullable|string|max:20';
             $rules['empresa_logo'] = 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048';
         }
-        // Reglas para cliente
+
         elseif ($user->hasRole('cliente')) {
             $rules['cliente_telefono'] = 'required|string|max:9';
         }
         
         $validatedData = $request->validate($rules);
 
-        // --- ACTUALIZACIÓN DE DATOS ---
+
         DB::beginTransaction();
         try {
             $user->name = $validatedData['name'];
@@ -71,7 +69,7 @@ class PerfilController extends Controller
             }
             $user->save();
             
-            // 2. Actualizar la Empresa si es un Admin/SuperAdmin
+            
             if ($user->hasRole(['super_admin', 'admin']) && $user->empresa) {
                 $empresa = $user->empresa; 
                 

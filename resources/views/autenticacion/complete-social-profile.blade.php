@@ -1,4 +1,3 @@
-{{-- resources/views/autenticacion/complete-social-profile.blade.php --}}
 @extends('autenticacion.app')
 @section('titulo', 'Sistema - Completar Registro')
 

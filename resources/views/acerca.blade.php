@@ -40,7 +40,7 @@
     .nacimos-texto {
     color: #000000 !important;
     text-shadow: none !important;
-    font-weight: 900 !important; /* Más fuerte que fw-bold si lo deseas */
+    font-weight: 900 !important;
     }
 
 
@@ -155,7 +155,6 @@
             <p class="lead text-muted mb-4">Forma parte de nuestra creciente comunidad de compradores y vendedores locales.</p>
             <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
                 <a href="{{ route('registro') }}?tipo_usuario=empresa" class="btn btn-primary btn-lg px-4 gap-3">Empieza Hoy</a>
-                <!--<a href="{{ url('/') }}" class="btn btn-outline-secondary btn-lg px-4">Explorar Tiendas</a> -->
             </div>
         </div>
     </div>

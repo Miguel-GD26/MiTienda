@@ -21,7 +21,7 @@ class PermissionController extends Controller
         $texto = $request->input('texto');
         $registros = Permission::where('name', 'like', "%{$texto}%")
             ->orderBy('name', 'asc')
-            ->paginate(12); // Puedes ajustar la paginación
+            ->paginate(12);
 
         return view('permission.index', compact('registros', 'texto'));
     }
@@ -35,23 +35,16 @@ class PermissionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:permissions,name',
-            // 'guard_name' => 'nullable|string|max:255', // Si lo tienes en el formulario
         ]);
 
         Permission::create([
             'name' => $request->input('name'),
-            'guard_name' => $request->input('guard_name', 'web') // 'web' por defecto
+            'guard_name' => $request->input('guard_name', 'web')
         ]);
 
         return redirect()->route('permisos.index')
             ->with('mensaje', 'Permiso "' . $request->input('name') . '" creado satisfactoriamente.');
     }
-
-    // El método show() no suele ser necesario para una lista simple de permisos.
-    // public function show(Permission $permission)
-    // {
-    //     //
-    // }
 
     public function edit(Permission $permiso) // Route Model Binding
     {
@@ -63,7 +56,6 @@ class PermissionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:permissions,name,' . $permiso->id,
-            // 'guard_name' => 'nullable|string|max:255', // Si permites editarlo
         ]);
 
         $permiso->name = $request->input('name');

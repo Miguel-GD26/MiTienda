@@ -27,12 +27,10 @@ class UserController extends Controller
 
         $query = User::with('roles', 'empresa');
 
-        // Filtrar por empresa si el usuario no es Super Admin
         if (!$user->hasRole('super_admin')) {
             $query->where('empresa_id', $user->empresa_id);
         }
 
-        // Filtrar por texto de búsqueda
         if ($texto) {
             $query->where(function($q) use ($texto) {
                 $q->where('name', 'like', "%{$texto}%")
@@ -52,13 +50,11 @@ class UserController extends Controller
         $user = Auth::user();
 
         $rolesQuery = Role::query();
-        // Super Admin puede ver todos los roles, los demás no pueden asignar 'super_admin'
         if (!$user->hasRole('super_admin')) {
             $rolesQuery->where('name', '!=', 'super_admin');
         }
         $roles = $rolesQuery->get();
         
-        // Solo Super Admin puede asignar empresas
         $empresas = $user->hasRole('super_admin') ? Empresa::all() : collect();
 
         return view('usuario.action', compact('roles', 'empresas'));
@@ -69,7 +65,6 @@ class UserController extends Controller
     {
         $this->authorize('user-create');
 
-        // --- VALIDACIÓN ---
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -87,7 +82,6 @@ class UserController extends Controller
         }
         $validatedData = $request->validate($rules);
 
-        // --- CREACIÓN (TRANSACCIÓN) ---
         DB::beginTransaction();
         try {
             $empresaId = null;
@@ -157,7 +151,6 @@ class UserController extends Controller
     {
         $this->authorize('user-edit', $usuario);
         
-        // --- VALIDACIÓN ---
         $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($usuario->id)],
@@ -169,7 +162,6 @@ class UserController extends Controller
         }
         $validatedData = $request->validate($rules);
         
-        // --- ACTUALIZACIÓN (TRANSACCIÓN) ---
         DB::beginTransaction();
         try {
             $usuario->name = $validatedData['name'];
@@ -179,7 +171,6 @@ class UserController extends Controller
             }
             $usuario->activo = $request->has('activo') ? 1 : 0;
             
-            // La asignación de empresa no se cambia en la actualización
             $usuario->save();
             $usuario->syncRoles($validatedData['role']);
 
@@ -207,77 +198,50 @@ class UserController extends Controller
         return redirect()->route('usuarios.index')->with('mensaje', 'Usuario ' . $usuario->name . ' actualizado correctamente.');
     }
 
-    /**
-     * Elimina un usuario de la base de datos.
-     */
-    // public function destroy(User $usuario)
-    // {
-    //     $this->authorize('user-delete', $usuario);
-    //     $nombreUsuario = $usuario->name;
-    //     $usuario->delete();
-    //     return redirect()->route('usuarios.index')->with('mensaje', $nombreUsuario . ' eliminado correctamente.');
-    // }
-
-    // app/Http/Controllers/UserController.php
-
+    
     public function destroy(User $usuario)
     {
         $this->authorize('user-delete', $usuario);
 
-        // Es crucial realizar esto dentro de una transacción para asegurar que todo
-        // se complete correctamente o no se haga nada si algo falla.
         DB::beginTransaction();
         try {
             $nombreUsuario = $usuario->name;
-            $empresa = $usuario->empresa; // Guardamos la referencia a la empresa antes de borrar el usuario
+            $empresa = $usuario->empresa;
 
-            // 1. Eliminar al usuario
             $usuario->delete();
 
-            // 2. Comprobar si el usuario tenía una empresa asociada
             if ($empresa) {
                 
-                // 2a. Comprobar si esta empresa tiene otros usuarios administradores.
-                // Si es así, NO la borramos. Si es el último, SÍ la borramos.
                 $otrosAdmins = User::where('empresa_id', $empresa->id)
-                                    ->where('id', '!=', $usuario->id) // Excluimos al usuario que estamos borrando
+                                    ->where('id', '!=', $usuario->id) 
                                     ->exists();
 
                 if (!$otrosAdmins) {
-                    // Es el último (o único) administrador, así que procedemos a borrar la empresa.
-
-                    // 2b. Si la empresa tiene un logo, lo eliminamos de Cloudinary
+                    
                     if ($empresa->logo_url) {
                         cloudinary()->uploadApi()->destroy($empresa->logo_url);
                     }
 
-                    // 2c. Aquí también deberías eliminar otros activos de la empresa,
-                    // como productos y sus imágenes.
                     foreach ($empresa->productos as $producto) {
                         if ($producto->imagen_url) {
                             cloudinary()->uploadApi()->destroy($producto->imagen_url);
                         }
                     }
                     
-                    // 2d. Finalmente, eliminamos la empresa de la base de datos.
-                    // Esto (si tienes bien configuradas las claves foráneas con onDelete('cascade'))
-                    // podría eliminar automáticamente productos, categorías, etc.
                     $empresa->delete();
                 }
             }
 
-            DB::commit(); // Confirmamos todos los cambios
+            DB::commit();
 
             return redirect()->route('usuarios.index')->with('mensaje', 'Usuario ' . $nombreUsuario . ' y sus datos asociados han sido eliminados correctamente.');
 
         } catch (\Exception $e) {
-            DB::rollBack(); // Revertimos todo si algo salió mal
+            DB::rollBack();
             return redirect()->route('usuarios.index')->with('error', 'Ocurrió un error al eliminar el usuario: ' . $e->getMessage());
         }
     }
-    /**
-     * Cambia el estado (activo/inactivo) de un usuario.
-     */
+    
     public function toggleStatus(User $usuario)
     {
         $this->authorize('user-activate', $usuario);

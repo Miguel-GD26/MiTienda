@@ -13,12 +13,8 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    // Estados clave para mostrar en el dashboard.
     private $relevantStatuses = ['pendiente', 'atendido', 'enviado', 'entregado', 'cancelado'];
 
-    /**
-     * Muestra el dashboard principal según el rol del usuario.
-     */
     public function index()
     {
         $user = Auth::user();
@@ -29,15 +25,12 @@ class DashboardController extends Controller
         } elseif ($user->hasRole('admin')) {
             $data = $this->getAdminData($user->empresa);
         } else {
-            return view('dashboard-simple');
+            return view('welcome');
         }
         
         return view('dashboard', $data);
     }
     
-    /**
-     * Recopila todos los datos para el dashboard del Super Administrador.
-     */
     private function getSuperAdminData()
     {
         $statusCounts = Pedido::whereIn('estado', $this->relevantStatuses)
@@ -71,16 +64,12 @@ class DashboardController extends Controller
         ];
     }
     
-    /**
-     * Recopila todos los datos para el dashboard del Administrador de Empresa.
-     */
     private function getAdminData($empresa)
     {
         if (!$empresa) {
-            return [ /* ... array vacío por defecto ... */ ];
+            return [ ];
         }
 
-        // ... (La lógica para statusCounts, statusBar, etc., se mantiene igual) ...
         $statusCounts = $empresa->pedidos()->whereIn('estado', $this->relevantStatuses)
             ->select('estado', DB::raw('count(*) as total'))->groupBy('estado')->pluck('total', 'estado')->all();
         foreach ($this->relevantStatuses as $status) { if (!isset($statusCounts[$status])) $statusCounts[$status] = 0; }
@@ -96,20 +85,13 @@ class DashboardController extends Controller
         
         $sparklineData = $this->getSparklineData($empresa->id);
 
-        // === INICIO DE LA LÓGICA CORREGIDA Y MEJORADA ===
-
-        // Obtiene los modelos de Cliente que están asociados a esta empresa a través de la tabla pivote.
-        // Ordenamos por la fecha de creación en la tabla pivote para saber cuándo se asociaron.
         $ultimosClientesModels = $empresa->clientes()
-            ->with('user') // Precargamos la relación 'user' para evitar N+1 queries
-            ->latest('cliente_empresa.created_at') // Ordenamos por la fecha de la tabla pivote
+            ->with('user') 
+            ->latest('cliente_empresa.created_at') 
             ->take(5)
             ->get();
 
-        // Mapeamos para obtener solo los modelos de User, que es lo que la vista espera.
         $ultimosClientes = $ultimosClientesModels->map(function ($cliente) {
-            // Devolvemos el modelo User, pero añadimos la fecha de asociación para poder mostrarla.
-            // Si el user no existe (caso raro), lo omitimos.
             if ($cliente->user) {
                 $cliente->user->asociado_hace = $cliente->pivot->created_at->diffForHumans();
                 return $cliente->user;
@@ -127,13 +109,10 @@ class DashboardController extends Controller
             'sparkline' => $sparklineData,
             'totalCategorias' => $empresa->categorias()->count(),
             'totalClientes' => $empresa->clientes()->count(),
-            'ultimosClientes' => $ultimosClientes, // Pasamos la nueva colección de usuarios a la vista
+            'ultimosClientes' => $ultimosClientes, 
         ];
     }
 
-    /**
-     * Genera los datos para el gráfico de ingresos de los últimos 15 días.
-     */
     private function getSparklineData($empresaId = null)
     {
         $sparklineData = [];
