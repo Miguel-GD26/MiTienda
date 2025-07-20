@@ -6,9 +6,7 @@
 <main class="app-main">
     <div class="container-fluid mt-4" 
          x-data="{ 
-             // Inicializa la empresa seleccionada con el valor actual o el antiguo si hay un error de validación
              empresaSeleccionada: '{{ old('empresa_id', $producto->empresa_id ?? '') }}',
-             // Pasa todas las categorías a AlpineJS, agrupadas por su empresa_id (solo para Super Admin)
              categorias: {{ auth()->user()->hasRole('super_admin') ? json_encode($categorias->groupBy('empresa_id')) : '[]' }}
          }">
         
@@ -52,19 +50,12 @@
                             @if(auth()->user()->hasRole('super_admin'))
                             <div class="mb-3">
                                 <label for="empresa_id" class="form-label">Empresa <span class="text-danger">*</span></label>
-                                <select name="empresa_id" id="empresa_id" class="form-select @error('empresa_id') is-invalid @enderror" 
-                                        x-model="empresaSeleccionada" 
-                                        {{-- El campo se deshabilita en modo edición --}}
-                                        {{ isset($producto) ? 'disabled' : '' }} required>
-                                    
+                                <select name="empresa_id" id="empresa_id" class="form-select @error('empresa_id') is-invalid @enderror" x-model="empresaSeleccionada" {{ isset($producto) ? 'disabled' : '' }} required>
                                     <option value="" disabled {{ old('empresa_id', $producto->empresa_id ?? '') == '' ? 'selected' : '' }}>-- Seleccione una empresa --</option>
                                     @foreach($empresas as $empresa)
-                                        <option value="{{ $empresa->id }}" {{ old('empresa_id', $producto->empresa_id ?? '') == $empresa->id ? 'selected' : '' }}>
-                                            {{ $empresa->nombre }}
-                                        </option>
+                                        <option value="{{ $empresa->id }}" {{ old('empresa_id', $producto->empresa_id ?? '') == $empresa->id ? 'selected' : '' }}>{{ $empresa->nombre }}</option>
                                     @endforeach
                                 </select>
-                                {{-- Campo oculto para enviar el ID de la empresa en modo edición --}}
                                 @if(isset($producto))
                                     <input type="hidden" name="empresa_id" value="{{ $producto->empresa_id }}">
                                 @endif
@@ -81,9 +72,7 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="categoria_id" class="form-label">Categoría <span class="text-danger">*</span></label>
-                                    <select name="categoria_id" id="categoria_id" class="form-select @error('categoria_id') is-invalid @enderror" 
-                                            :disabled="!empresaSeleccionada && {{ auth()->user()->hasRole('super_admin') ? 'true' : 'false' }}" required>
-                                        
+                                    <select name="categoria_id" id="categoria_id" class="form-select @error('categoria_id') is-invalid @enderror" :disabled="!empresaSeleccionada && {{ auth()->user()->hasRole('super_admin') ? 'true' : 'false' }}" required>
                                         @if(auth()->user()->hasRole('super_admin'))
                                             <option value="">-- Seleccione una empresa primero --</option>
                                             <template x-if="empresaSeleccionada">
@@ -94,64 +83,68 @@
                                         @else
                                             <option value="">-- Seleccione una categoría --</option>
                                             @foreach ($categorias as $categoria)
-                                                <option value="{{ $categoria->id }}" {{ old('categoria_id', $producto->categoria_id ?? '') == $categoria->id ? 'selected' : '' }}>
-                                                    {{ $categoria->nombre }}
-                                                </option>
+                                                <option value="{{ $categoria->id }}" {{ old('categoria_id', $producto->categoria_id ?? '') == $categoria->id ? 'selected' : '' }}>{{ $categoria->nombre }}</option>
                                             @endforeach
                                         @endif
                                     </select>
                                     @error('categoria_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     @if ($categorias->isEmpty() && !auth()->user()->hasRole('super_admin'))
-                                        <div class="form-text text-danger mt-2">
-                                            No puedes crear un producto sin categorías. <a href="{{ route('categorias.create') }}">Crea una primero</a>.
-                                        </div>
+                                        <div class="form-text text-danger mt-2">No puedes crear un producto sin categorías. <a href="{{ route('categorias.create') }}">Crea una primero</a>.</div>
                                     @endif
                                 </div>
                             </div>
 
-                            <!-- Fila 2: Precio y Stock -->
+                            {{-- CAMBIO AQUÍ: Nueva fila para agrupar los precios --}}
+                            <!-- Fila 2: Precios -->
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="precio" class="form-label">Precio <span class="text-danger">*</span></label>
+                                    {{-- CAMBIO AQUÍ: Etiqueta actualizada --}}
+                                    <label for="precio" class="form-label">Precio Normal <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text">S/.</span>
-                                        <input type="number"
-                                            step="0.01"
-                                            min="0"
-                                            class="form-control @error('precio') is-invalid @enderror"
-                                            name="precio"
-                                            id="precio"
-                                            value="{{ old('precio', $producto->precio ?? '0.00') }}"
-                                            required>
-
-                                        <!-- <input type="number" step="0.01" class="form-control @error('precio') is-invalid @enderror" name="precio" id="precio" value="{{ old('precio', $producto->precio ?? '0.00') }}" required> -->
+                                        <input type="number" step="0.01" min="0" class="form-control @error('precio') is-invalid @enderror" name="precio" id="precio" value="{{ old('precio', $producto->precio ?? '0.00') }}" required>
                                     </div>
                                     @error('precio') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="stock" class="form-label">Stock</label>
-                                    <!-- <input type="number" class="form-control @error('stock') is-invalid @enderror" name="stock" id="stock" value="{{ old('stock', $producto->stock ?? '') }}" placeholder="Dejar vacío si no aplica"> -->
-                                    <input type="number" 
-                                        class="form-control @error('stock') is-invalid @enderror" 
-                                        name="stock" 
-                                        id="stock" 
-                                        value="{{ old('stock', $producto->stock ?? '0') }}" 
-                                        placeholder="Dejar vacío si no aplica"
-                                        min="0" 
-                                        step="1">
 
-                                    @error('stock') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                {{-- CAMBIO AQUÍ: NUEVO CAMPO PARA PRECIO DE OFERTA --}}
+                                <div class="col-md-6 mb-3">
+                                    <label for="precio_oferta" class="form-label">Precio de Oferta (Opcional)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">S/.</span>
+                                        <input type="number" step="0.01" min="0" class="form-control @error('precio_oferta') is-invalid @enderror" name="precio_oferta" id="precio_oferta" value="{{ old('precio_oferta', $producto->precio_oferta ?? '') }}">
+                                    </div>
+                                    @error('precio_oferta') 
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @else
+                                        <small class="form-text text-muted">Deja en 0 o vacío si el producto no está en oferta.</small>
+                                    @enderror
                                 </div>
                             </div>
 
-                            <!-- Fila 3: Descripción -->
+                            <!-- Fila 3: Stock -->
+                            <div class="mb-3">
+                                <label for="stock" class="form-label">Stock (Inventario) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control @error('stock') is-invalid @enderror" 
+                                    name="stock" id="stock" 
+                                    value="{{ old('stock', $producto->stock ?? 0) }}" 
+                                    min="0" step="1" required>
+                                <small class="form-text text-muted">
+                                    Introduce la cantidad de unidades disponibles.
+                                </small>
+                                @error('stock') 
+                                    <div class="invalid-feedback">{{ $message }}</div> 
+                                @enderror
+                            </div>
+
+                            <!-- Fila 4: Descripción -->
                             <div class="mb-3">
                                 <label for="descripcion" class="form-label">Descripción (Opcional)</label>
                                 <textarea name="descripcion" id="descripcion" class="form-control @error('descripcion') is-invalid @enderror" rows="4">{{ old('descripcion', $producto->descripcion ?? '') }}</textarea>
                                 @error('descripcion') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
-                            <!-- Fila 4: Subida de Imagen -->
+                            <!-- Fila 5: Subida de Imagen -->
                             <div class="mb-3">
                                 <label for="imagen_url" class="form-label">Imagen del Producto</label>
                                 <input type="file" class="form-control @error('imagen_url') is-invalid @enderror" name="imagen_url" id="imagen_url" accept="image/*">
@@ -161,14 +154,10 @@
                                 @endisset
                             </div>
 
-                            <!-- Sección para mostrar la imagen actual -->
                             @isset($producto->imagen_url)
                                 <div class="mb-3">
                                     <label>Imagen Actual:</label><br>
-                                    <img src="{{ cloudinary()->image($producto->imagen_url)->toUrl() }}"
-                                         alt="{{ $producto->nombre }}" 
-                                         class="img-thumbnail"
-                                         style="max-width: 150px; max-height: 150px;">
+                                    <img src="{{ cloudinary()->image($producto->imagen_url)->toUrl() }}" alt="{{ $producto->nombre }}" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
                                 </div>
                             @endisset
                         </div>
@@ -194,7 +183,9 @@
                         <h6 class="text-muted"><i class="fa-solid fa-lightbulb text-warning me-2"></i>Buenas Prácticas</h6>
                         <ul class="list-unstyled text-muted small ps-3">
                             <li class="mb-2"><i class="fa-solid fa-check text-success me-1"></i> <strong>Nombres claros:</strong> El nombre debe ser descriptivo y fácil de entender.</li>
-                            <li class="mb-2"><i class="fa-solid fa-check text-success me-1"></i> <strong>Precio correcto:</strong> Asegúrate de que el precio sea el final para el cliente.</li>
+                            <li class="mb-2"><i class="fa-solid fa-check text-success me-1"></i> <strong>Precios correctos:</strong> Asegúrate de que los precios sean los finales para el cliente.</li>
+                            {{-- CAMBIO AQUÍ: Añadida la ayuda para la nueva funcionalidad --}}
+                            <li class="mb-2"><i class="fa-solid fa-check text-success me-1"></i> <strong>Usa las Ofertas:</strong> El "Precio de Oferta" es una herramienta poderosa. ¡Úsala para crear promociones!</li>
                             <li class="mb-2"><i class="fa-solid fa-check text-success me-1"></i> <strong>Imágenes de calidad:</strong> Una buena imagen vende más. Usa fotos claras y atractivas.</li>
                         </ul>
                     </div>
@@ -207,7 +198,6 @@
 
 @push('scripts')
 <script>
-    // Activar el menú correspondiente en el sidebar
     const menuGestion = document.getElementById('mnuGestion');
     if (menuGestion) menuGestion.classList.add('menu-open');
     const itemProducto = document.getElementById('itemProducto');

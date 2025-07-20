@@ -1,16 +1,13 @@
 @extends('welcome.app')
-
 @section('titulo', 'Mi Perfil')
 
 @section('contenido')
 <main class="app-main">
-    <div class="container-contenido">
-        
+    <div class="container-contenido">        
         <h2 class="h3 mb-4">
             <i class="fa-solid fa-id-card-clip me-2"></i>
             Editar Mi Perfil
         </h2>
-
         <div class="row"> 
             <div class="col-md-12">
                 <div class="card shadow-sm border-0 mb-4">
@@ -41,24 +38,25 @@
                                 <div class="col-md-6 mb-3">
                                     <label for="email" class="form-label">Email</label>
                                     <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                     id="email" name="email"  value="{{ old('email', $registro->email ?? '') }}" required>
+                                     id="email" name="email"  value="{{ old('email', $registro->email ?? '') }}" readonly>
                                      @error('email') <small class="text-danger">{{$message}}</small> @enderror
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="password" class="form-label">Nueva Contraseña</label>
-                                    <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                     id="password" name="password" placeholder="Dejar en blanco para no cambiar">
-                                     @error('password') <small class="text-danger">{{$message}}</small> @enderror
+                            @if(!$isSocialUser)
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="password" class="form-label">Nueva Contraseña</label>
+                                        <input type="password" class="form-control @error('password') is-invalid @enderror"
+                                        id="password" name="password" placeholder="Dejar en blanco para no cambiar">
+                                        @error('password') <small class="text-danger">{{$message}}</small> @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="password_confirmation" class="form-label">Confirmar Contraseña</label>
+                                        <input type="password" class="form-control"
+                                        id="password_confirmation" name="password_confirmation">
+                                    </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="password_confirmation" class="form-label">Confirmar Contraseña</label>
-                                    <input type="password" class="form-control"
-                                     id="password_confirmation" name="password_confirmation">
-                                </div>
-                            </div>
-
+                            @endif
                             {{-- SECCIÓN DATOS DEL CLIENTE --}}
                             @if(isset($cliente))
                                 <hr class="my-4">
@@ -75,41 +73,7 @@
                                     {{-- Aquí puedes añadir más campos de CLIENTE si los necesitas --}}
                                 </div>
                             @endif
-
-                            {{-- SECCIÓN DATOS DE LA EMPRESA --}}
-                            @if(isset($empresa))
-                                <hr class="my-4">
-                                <h5 class="mb-3 text-primary"><i class="fa-solid fa-building me-2"></i>Datos de tu Empresa</h5>
-                                <p class="text-muted small">Información pública y de contacto de tu tienda.</p>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="empresa_nombre" class="form-label">Nombre de la Empresa</label>
-                                        <input type="text" class="form-control @error('empresa_nombre') is-invalid @enderror"
-                                            id="empresa_nombre" name="empresa_nombre" value="{{ old('empresa_nombre', $empresa->nombre) }}" required>
-                                        @error('empresa_nombre') <small class="text-danger">{{$message}}</small> @enderror
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="empresa_rubro" class="form-label">Rubro</label>
-                                        <input type="text" class="form-control @error('empresa_rubro') is-invalid @enderror"
-                                            id="empresa_rubro" name="empresa_rubro" value="{{ old('empresa_rubro', $empresa->rubro) }}" required>
-                                        @error('empresa_rubro') <small class="text-danger">{{$message}}</small> @enderror
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="empresa_telefono_whatsapp" class="form-label">Teléfono / WhatsApp</label>
-                                        <input type="text" class="form-control @error('empresa_telefono_whatsapp') is-invalid @enderror"
-                                            id="empresa_telefono_whatsapp" name="empresa_telefono_whatsapp" value="{{ old('empresa_telefono_whatsapp', $empresa->telefono_whatsapp) }}" required>
-                                        @error('empresa_telefono_whatsapp') <small class="text-danger">{{$message}}</small> @enderror
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="empresa_logo" class="form-label">Logo</label>
-                                        <input type="file" class="form-control @error('empresa_logo') is-invalid @enderror" id="empresa_logo" name="empresa_logo">
-                                        @error('empresa_logo') <small class="text-danger">{{$message}}</small> @enderror
-                                    </div>
-                                </div>
-                            @endif
-                            
+                                                        
                             <div class="card-footer bg-white text-end border-0 pt-3 px-0">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fa-solid fa-floppy-disk me-1"></i> Actualizar Perfil
@@ -126,8 +90,7 @@
 
 @push('scripts')
 <script>
-    // Lógica para marcar el menú activo en el sidebar (si tienes un ítem de "Perfil")
-    const itemPerfil = document.getElementById('itemPerfil'); // Asegúrate de que este ID exista en tu menú
+    const itemPerfil = document.getElementById('itemPerfil');
     if (itemPerfil) {
         itemPerfil.classList.add('active');
     }

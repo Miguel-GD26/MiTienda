@@ -10,13 +10,9 @@
     <div class="card-body">
       {{-- COMIENZA LA ESTRUCTURA DE 2 COLUMNAS --}}
       <div class="row g-4 align-items-center mt-3">
-
-        <!-- Columna de la imagen -->
         <div class="col-12 col-md-4 text-center">
           <img src="{{ asset('assets/img/usuario.gif') }}" alt="Icono de seguridad" class="img-fluid" style="max-height: 200px;">
         </div>
-
-        <!-- Columna del formulario -->
         <div class="col-12 col-md-8">
           <p class="text-muted">
             Por favor, confirma tu correo electrónico y elige una nueva contraseña.
@@ -76,7 +72,6 @@
               </button>
             </div>
           </form>
-          {{-- FIN DEL FORMULARIO --}}
         </div>
       </div>
     </div>

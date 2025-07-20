@@ -1,6 +1,3 @@
-{{-- ======================================================= --}}
-{{--         HTML DEL MODAL PARA COMPARTIR ENLACE            --}}
-{{-- ======================================================= --}}
 @auth
 <div class="modal fade" id="shareLinkModal" tabindex="-1" aria-labelledby="shareLinkModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -12,10 +9,6 @@
       <div class="modal-body">
         <p>Este es el enlace público a tu tienda. Cópialo y compártelo con tus clientes.</p>
         <div class="input-group">
-            
-            {{-- ======================================================= --}}
-            {{-- LÓGICA CORREGIDA AQUÍ --}}
-            {{-- ======================================================= --}}
             @if(auth()->user()->empresa)
                 {{-- Si el usuario TIENE una empresa, genera la URL --}}
                 <input type="text" class="form-control" value="{{ route('tienda.public.index', ['empresa' => auth()->user()->empresa]) }}" id="storeLinkInput" readonly>
@@ -26,8 +19,7 @@
                 {{-- Si el usuario NO tiene una empresa (es super_admin o cliente), muestra un mensaje --}}
                 <input type="text" class="form-control" value="No tienes una tienda asignada." id="storeLinkInput" readonly disabled>
             @endif
-            {{-- ======================================================= --}}
-
+          
         </div>
       </div>
     </div>

@@ -3,10 +3,17 @@
 
 @push('estilos')
 <style>
-    .status-badge { font-size: 1rem; padding: 0.5em 0.9em; font-weight: 600; }
-    .product-image-sm { width: 60px; height: 60px; object-fit: cover; border-radius: .375rem; }
-    
-    /* Estilo para el botón de guardar cuando está deshabilitado */
+    .status-badge { 
+        font-size: 1rem; 
+        padding: 0.5em 0.9em; 
+        font-weight: 600; 
+    }
+    .product-image-sm { 
+        width: 60px; 
+        height: 60px; 
+        object-fit: cover; 
+        border-radius: .375rem; 
+    }
     .btn:disabled {
         cursor: not-allowed;
         opacity: 0.65;
@@ -58,7 +65,7 @@
                         @switch($pedido->estado)
                             @case('pendiente') bg-warning text-dark @break
                             @case('atendido') bg-info text-dark @break
-                            @case('enviado') bg-dark @break
+                            @case('enviado') bg-primary @break
                             @case('entregado') bg-success @break
                             @case('cancelado') bg-danger @break
                         @endswitch
@@ -117,7 +124,7 @@
                         <strong>Nombre:</strong>
                         <p class="text-muted">{{ $pedido->cliente->nombre ?? 'No disponible' }}</p>
                         <strong>Correo:</strong>
-                        <p class="text-muted">{{ $pedido->cliente->correo ?? 'No disponible' }}</p>
+                        <p class="text-muted">{{ $pedido->cliente->user->email ?? 'No disponible' }}</p>
                         <strong>Teléfono:</strong>
                         <p class="text-muted">{{ $pedido->cliente->telefono ?? 'No proporcionado' }}</p>
                     </div>
@@ -134,28 +141,34 @@
                            <label for="estado" class="form-label fw-bold">Actualizar Estado:</label>
                            <div class="input-group">
                                <select name="estado" id="estado" class="form-select" x-model="estadoSeleccionado"
-                                       @if(in_array($pedido->estado, ['completado', 'cancelado'])) disabled @endif>
-                                   @foreach(['pendiente', 'atendido', 'enviado', 'entregado'] as $estado)
+                                       @if(in_array($pedido->estado, ['entregado', 'cancelado'])) disabled @endif>
+                                   
+                                   @foreach(['pendiente', 'atendido', 'enviado', 'entregado', 'cancelado'] as $estado)
+                                       {{-- Ocultar la opción 'cancelado' si el pedido no está ya cancelado (se gestiona con un botón) --}}
+                                       @if($estado === 'cancelado' && $pedido->estado !== 'cancelado')
+                                           @continue
+                                       @endif
                                        <option value="{{ $estado }}" {{ $pedido->estado == $estado ? 'selected' : '' }}>
                                            {{ ucfirst($estado) }}
                                        </option>
                                    @endforeach
                                </select>
-                               <button type="submit" class="btn btn-primary" :disabled="estadoSeleccionado === estadoActual" data-bs-toggle="tooltip" title="Guardar nuevo estado">
+                               <button type="submit" class="btn btn-primary" :disabled="estadoSeleccionado === estadoActual || ['entregado', 'cancelado'].includes(estadoActual)" data-bs-toggle="tooltip" title="Guardar nuevo estado">
                                    <i class="fa-solid fa-floppy-disk"></i>
                                </button>
                            </div>
-                           @if(in_array($pedido->estado, ['completado', 'cancelado']))
-                                <small class="text-muted d-block mt-2">Este pedido ya no puede cambiar de estado.</small>
+                           @if(in_array($pedido->estado, ['entregado', 'cancelado']))
+                                <small class="text-muted d-block mt-2">Este pedido es final y ya no puede cambiar de estado.</small>
                            @endif
                        </form>
                        @endcan
                        
                        @can('pedido-cancel', $pedido)
-                       @if($pedido->estado !== 'cancelado' && $pedido->estado !== 'completado')
+                       {{-- Mostrar el botón "Cancelar" solo si el estado es 'pendiente' o 'atendido' --}}
+                       @if(in_array($pedido->estado, ['pendiente', 'atendido']))
                            <hr>
                            <p class="small text-muted mb-2">Si el pedido debe ser anulado, puedes cancelarlo aquí.</p>
-                           <form action="{{ route('pedidos.destroy', $pedido) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres cancelar este pedido?');">
+                           <form action="{{ route('pedidos.destroy', $pedido) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres cancelar este pedido? Esta acción no se puede deshacer.');">
                                @csrf
                                @method('DELETE')
                                <button type="submit" class="btn btn-outline-danger w-100">

@@ -15,29 +15,33 @@
             <div class="navbar-nav align-items-center">
                 <!-- He cambiado 'active-item' por 'active' de Bootstrap -->
                 <a href="{{ route('welcome') }}" class="nav-item nav-link px-3 {{ Route::is('welcome') ? 'active' : '' }}">Inicio</a>
-                @auth
-                @php
-                    // --- Lógica Centralizada para Determinar la URL de Retorno para el botón superior ---
-                    $firstItem = !empty($cartItems) ? reset($cartItems) : null;
-                    // La URL de retorno prioriza la info del carrito, y si no, usa la sesión.
-                    $returnUrl = $firstItem ? route('tienda.public.index', $firstItem['tienda_slug']) : session('url.store_before_login');
-                @endphp
+                {{-- Esto probablemente está en un parcial como `layouts/navbar.blade.php` --}}
 
-                <!-- <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle px-3" data-toggle="dropdown">Categorías</a>
-                    <div class="dropdown-menu dropdown-menu-right text-capitalize">
-                        <a href="{{ route('categorias.list') }}" class="dropdown-item">Todas las Categorías</a>
-                        <a href="#" class="dropdown-item">Testimonial</a>
-                    </div>
-                </div> -->
-                    @if($returnUrl)
+                @auth
+                    @if($misTiendas->isNotEmpty())
+                        {{-- Si el cliente tiene tiendas, mostramos un menú desplegable --}}
+                        <div class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle px-3" data-toggle="dropdown">
+                                <i class="fas fa-store me-1"></i> Mis Tiendas
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                @foreach($misTiendas as $tienda)
+                                    <a href="{{ route('tienda.public.index', $tienda->slug) }}" class="dropdown-item">
+                                        {{ $tienda->nombre }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @elseif($returnUrl)
+                        {{-- Si no tiene tiendas pero hay una URL de retorno (ej. del carrito), mostramos un enlace simple --}}
                         <a href="{{ $returnUrl }}" class="nav-item nav-link px-3 {{ Request::url() == $returnUrl ? 'active' : '' }}">
                             Tienda
-                        </a>    
+                        </a>
+
                     @endif
                 @endauth
                 <a href="{{ route('soporte') }}" class="nav-item nav-link px-3 {{ Route::is('soporte') ? 'active' : '' }}">Soporte</a>
-                <a href="#" class="nav-item nav-link px-3">Acerca de</a>
+                <a href="{{ route('acerca') }}" class="nav-item nav-link px-3 {{ Route::is('acerca') ? 'active' : '' }}">Acerca de</a>
                 
                 <!-- Separador opcional para dar espacio antes del botón -->
                 <div class="mx-lg-2"></div>
@@ -54,7 +58,6 @@
                 @endguest
 
                 @auth
-                    {{-- Si el usuario SÍ ha iniciado sesión, se muestra el menú --}}
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle px-3" data-toggle="dropdown">
                             <i class="fa-solid fa-circle-user"></i> {{ Auth::user()->name }}
@@ -80,47 +83,20 @@
                             </form>
                         </div>
                     </div>
-                @endauth
-                <!-- @auth
                     @if(auth()->user()->hasRole('cliente'))
-                    <a href="{{ route('cart.index') }}" class="nav-link position-relative">
-                        <i class="fa-solid fa-shopping-cart"></i>
-                        @if(count(session('cart', [])) > 0)
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{ count(session('cart', [])) }}
-                        </span>
-                        @endif
-                    </a>
-                    @endif
-                @endauth -->
-                @auth
-                    @if(auth()->user()->hasRole('cliente'))
-                        {{-- 
-                        Lógica condicional: si estamos en una página de tienda, el enlace al carrito
-                        incluirá el slug de esa tienda. La variable $tienda viene del controlador
-                        de la página de la tienda.
-                        --}}
-                        @if(isset($tienda))
-                            <a href="{{ route('cart.index', ['empresa' => $tienda]) }}" class="nav-link position-relative">
-                                <i class="fa-solid fa-shopping-cart"></i>
-                                @if(count(session('cart', [])) > 0)
+                        <a href="{{ route('cart.index') }}" class="nav-link position-relative">
+                            <i class="fa-solid fa-shopping-cart"></i>
+                            @if($cartItemCount > 0)
                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    {{ count(session('cart', [])) }}
+                                    {{ $cartItemCount }}
+                                    <span class="visually-hidden">items en el carrito</span>
                                 </span>
-                                @endif
-                            </a>
-                        @else
-                            {{-- Si no estamos en una página de tienda, el enlace al carrito no pasa parámetros --}}
-                            <a href="{{ route('cart.index') }}" class="nav-link position-relative">
-                                <i class="fa-solid fa-shopping-cart"></i>
-                                @if(count(session('cart', [])) > 0)
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ count(session('cart', [])) }}</span>
-                                @endif
-                            </a>
-                        @endif
+                            @endif
+                        </a>
                     @endif
                 @endauth
             </div>
         </div>
     </div>
 </nav>
+

@@ -4,50 +4,76 @@
 @push('estilos')
 <style>
     .tienda-header {
-        background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?q=80&w=1974&auto=format&fit=crop');
+        background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.8)), url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2073&auto=format&fit=crop');
         background-size: cover;
         background-position: center;
         color: white;
     }
-    .product-card-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 1.5rem;
+
+    /* --- BADGES (Etiquetas sobre la imagen) --- */
+    .product-badge {
+        position: relative;
+        top: 15px;
+        left: 15px;
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        color: white;
+        border-radius: 20px;
+        z-index: 2;
+        text-transform: uppercase;
     }
-    .custom-card { /* Este estilo lo tenías tú, lo mantenemos */
+
+    .badge-outofstock {
+        background-color: #6c757d; /* Gris oscuro para Agotado */
+    }
+
+    .badge-sale {
+        background-color: #ffc107;
+    }
+
+    .badge-lowstock {
+        transform: translateX(100%) translateY(700%);
+        background-color: #E67E22;
+        color: white;
+    }
+
+
+    /* --- BOTONES --- */
+    .btn-agotado {
+        background-color: #8B8177; /* Marrón-grisáceo */
+        color: white;
         border: none;
-        border-radius: 15px;
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        background-color: #fff;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
     }
-    .custom-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+
+    .btn-anadir {
+        background-color: #D4A778; /* Ocre/arena */
+        color: #4B3F35; /* Marrón oscuro */
+        border: none;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: background-color 0.2s ease-in-out;
     }
-    .custom-card .img-box {
-        height: 200px;
-        overflow: hidden;
+
+    .btn-anadir:hover {
+        background-color: #c59868;
+        color: #4B3F35;
     }
-    .custom-card .img-box img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+
+    /* --- TEXTO DE STOCK BAJO --- */
+    .stock-bajo-texto {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #E67E22;
+        margin-top: 0.5rem;
+        margin-bottom: 0.75rem;
     }
-    .custom-card .custom-content {
-        padding: 1.25rem;
-        text-align: center;
-    }
-    .custom-card h2 {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-    .custom-card .price {
-        font-size: 1.5rem;
+
+    .stock-bajo-texto strong {
         font-weight: 700;
-        color: var(--bs-primary);
-        margin-bottom: 1rem;
+        color: #D35400;
     }
 </style>
 @endpush
@@ -57,18 +83,17 @@
     
     {{-- Banner de la Tienda --}}
     <div class="tienda-header text-center p-5 mb-5 rounded shadow-lg">
-        <h1 class="display-4 fw-bold">{{ $tienda->nombre }}</h1>
-        <p class="lead">{{ $tienda->descripcion ?? 'Tu tienda de confianza para encontrar los mejores productos.' }}</p>
+        <h1 class="display-3 fw-bold">{{ $tienda->nombre }}</h1>
+        <!-- <p class="lead">{{ $tienda->descripcion ?? 'Tu tienda de confianza para encontrar los mejores productos.' }}</p> -->
     </div>
         
     {{-- Barra de Filtros --}}
-    <div class="card shadow-sm border-0 mb-5 sticky-top" style="top: 1rem; z-index: 1020;">
+    <div class="card shadow-sm border-0 mb-5">
         <div class="card-body">
             <form id="product-filters" class="row g-3 align-items-center">
                 <div class="col-md-5">
                      <div class="input-group">
                         <span class="input-group-text bg-light border-0"><i class="fa-solid fa-tags"></i></span>
-                        {{-- El select de categorías ahora tiene un ID para poder manipularlo --}}
                         <select name="categoria_id" id="categoria_id_filter" class="form-select border-0 bg-light">
                             <option value="">Todas las categorías</option>
                             @foreach ($categorias as $categoria)
@@ -92,26 +117,25 @@
         </div>
     </div>
 
-    {{-- Contenedor principal para productos y paginación --}}
     <div id="product-list-container">
         @include('tienda.producto', ['productos' => $productos, 'tienda' => $tienda])
     </div>
 </div>
-
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
     let searchTimer;
     const ajaxSearchUrl = "{{ route('tienda.productos.buscar_ajax', $tienda) }}";
+    const productListContainer = $('#product-list-container'); // Definimos el contenedor una vez
+    const productFiltersForm = $('#product-filters'); // Referencia al formulario
 
     function fetchProducts() {
         const query = $('#q_filter').val();
         const categoryId = $('#categoria_id_filter').val();
-        const productListContainer = $('#product-list-container');
         const categorySelect = $('#categoria_id_filter');
 
-        productListContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>');
+        productListContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div></div>');
 
         $.ajax({
             url: ajaxSearchUrl,
@@ -121,14 +145,11 @@ $(document).ready(function() {
                 categoria_id: categoryId
             },
             success: function(response) {
-                // 1. Reemplazar la cuadrícula de productos
                 productListContainer.html(response.products_html);
 
-                // 2. Actualizar las opciones del select de categorías
-                let currentCategorySelection = categorySelect.val(); // Guardar la selección actual
-                categorySelect.empty().append('<option value="">Todas las categorías</option>'); // Limpiar y añadir la opción por defecto
+                let currentCategorySelection = categoryId; // Usamos el valor que ya teníamos
+                categorySelect.empty().append('<option value="">Todas las categorías</option>');
 
-                // 3. Llenar el select con las categorías actualizadas
                 if (response.categories && response.categories.length > 0) {
                     $.each(response.categories, function(index, category) {
                         categorySelect.append($('<option>', {
@@ -138,7 +159,6 @@ $(document).ready(function() {
                     });
                 }
                 
-                // 4. Restaurar la selección si todavía existe
                 categorySelect.val(currentCategorySelection);
             },
             error: function() {
@@ -147,26 +167,34 @@ $(document).ready(function() {
         });
     }
 
-    // Eventos para disparar la búsqueda
-    $('#q_filter').on('keyup', function() {
+    productFiltersForm.on('submit', function(event) {
+        event.preventDefault(); 
+        
+        clearTimeout(searchTimer); 
+        
+        fetchProducts();
+    });
+
+    $('#q_filter').on('keyup', function(event) {
+        if (event.key === 'Enter') {
+            return;
+        }
         clearTimeout(searchTimer);
-        searchTimer = setTimeout(fetchProducts, 500);
+        searchTimer = setTimeout(fetchProducts, 500); // 500ms de retraso
     });
 
     $('#categoria_id_filter').on('change', function() {
         fetchProducts();
     });
 
-    // Paginación con AJAX (importante: debe delegar el evento al contenedor estático)
-    $('#product-list-container').on('click', '.pagination a', function(event) {
+    productListContainer.on('click', '.pagination a', function(event) {
         event.preventDefault(); 
         const url = $(this).attr('href');
-        const productListContainer = $('#product-list-container');
         
         productListContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>');
 
         $.get(url, function(data) {
-            productListContainer.html(data.products_html); // Suponiendo que la paginación también devuelve el JSON completo
+            productListContainer.html(data.products_html);
         }).fail(function() {
             productListContainer.html('<div class="alert alert-danger text-center">Error al cargar la página.</div>');
         });

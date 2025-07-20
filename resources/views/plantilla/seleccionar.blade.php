@@ -18,11 +18,21 @@
                             @endforeach
                         </select>
                         
-                        <div class="mt-4 d-flex justify-content-end gap-2" x-show="empresaSeleccionada">
-                            <button class="btn btn-outline-secondary" @click="copiarEnlace(empresaSeleccionada)">
+                        {{-- CAMBIO AQUÍ: Se ha eliminado el x-show del div. Ahora siempre es visible. --}}
+                        <div class="mt-4 d-flex justify-content-end gap-2">
+                            
+                            {{-- CAMBIO AQUÍ: Se añade :disabled para controlar el estado del botón. --}}
+                            <button class="btn btn-outline-secondary" 
+                                    @click="copiarEnlace(empresaSeleccionada)" 
+                                    :disabled="!empresaSeleccionada">
                                 <i class="fa-regular fa-copy me-1"></i> Copiar Enlace
                             </button>
-                            <a :href="generarUrl(empresaSeleccionada)" target="_blank" class="btn btn-primary">
+                            
+                            {{-- CAMBIO AQUÍ: Se añade :class para controlar el estado del enlace. --}}
+                            <a :href="empresaSeleccionada ? generarUrl(empresaSeleccionada) : '#'" 
+                               target="_blank" 
+                               class="btn btn-primary"
+                               :class="{ 'disabled': !empresaSeleccionada }">
                                 <i class="fa-solid fa-eye me-1"></i> Ver Tienda
                             </a>
                         </div>
@@ -43,12 +53,16 @@
     }
 
     function copiarEnlace(slug) {
+        // Añadimos una comprobación para no hacer nada si el slug está vacío
+        if (!slug) return;
+
         const url = generarUrl(slug);
         navigator.clipboard.writeText(url).then(() => {
+            // Sería mejor usar un toast o un feedback más sutil que un alert
             alert('¡Enlace de la tienda copiado al portapapeles!');
         }).catch(err => {
             console.error('Error al copiar: ', err);
             alert('No se pudo copiar el enlace.');
         });
     }
-    </script>
+</script>

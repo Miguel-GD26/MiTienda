@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Auth\PerfilController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\VerificationCodeController; 
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ClienteController;
@@ -18,19 +19,22 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Auth\SocialiteController;
+use Laravel\Socialite\Facades\Socialite;
+use App\Http\Controllers\WelcomeController;
 
 // --- Importaciones de Middleware y Modelos ---
 use App\Http\Middleware\RedirectAdminsFromWelcome;
 use App\Http\Middleware\RememberStoreUrl;
 use App\Models\Pedido;
 
-// 1. RUTAS PÚBLICAS (Accesibles por todos los visitantes)
 
+
+// 1. RUTAS PÚBLICAS (Accesibles por todos los visitantes)
 Route::middleware([RedirectAdminsFromWelcome::class])->group(function () {
-    Route::get('/', fn() => view('welcome'))->name('welcome');
+    Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
     Route::get('/soporte', fn() => view('soporte'))->name('soporte');
-    
-    // RUTA RESTAURADA: Lista pública de categorías
+    Route::get('/acerca', fn() => view('acerca'))->name('acerca');
     Route::get('/categorias/lista', [CategoriaController::class, 'listar'])->name('categorias.list');
 });
 
@@ -38,8 +42,6 @@ Route::middleware([RedirectAdminsFromWelcome::class])->group(function () {
 Route::middleware([RememberStoreUrl::class])->group(function () {
     Route::get('/tienda/{empresa:slug}', [ProductoController::class, 'mostrarTienda'])->name('tienda.public.index');
     Route::get('/tienda/{empresa:slug}/categoria/{categoria}', [ProductoController::class, 'filtrarPorCategoria'])->name('tienda.public.categoria');
-    
-    // Rutas para búsquedas AJAX en la tienda
     Route::get('/tienda/{empresa:slug}/buscar-categorias', [CategoriaController::class, 'buscarPublico'])->name('tienda.categorias.buscar');
     Route::get('/tienda/{empresa:slug}/buscar-productos', [ProductoController::class, 'buscarPublicoAjax'])->name('tienda.productos.buscar_ajax');
 });
@@ -52,6 +54,17 @@ Route::middleware('guest')->group(function () {
     Route::get('login', fn() => view('autenticacion.login'))->name('login');
     Route::post('login', [AuthController::class, 'login'])->name('login.post');
 
+    Route::get('/auth/google/redirect', [SocialiteController::class, 'redirect'])->name('login.google.redirect');
+
+    // 2. Google devuelve al usuario a esta ruta
+    Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->name('login.google.callback');
+
+    // 3. Muestra el formulario para completar el perfil si es un usuario nuevo
+    Route::get('/auth/google/complete', [SocialiteController::class, 'showCompleteForm'])->name('login.google.complete');
+
+    // 4. Procesa el formulario del paso 3
+    Route::post('/auth/google/complete', [SocialiteController::class, 'processCompleteForm'])->name('login.google.complete.store');
+
     // Registro
     Route::get('/registro', [RegisterController::class, 'showRegistroForm'])->name('registro');
     Route::post('/registro', [RegisterController::class, 'registrar'])->name('registro.store');
@@ -61,6 +74,10 @@ Route::middleware('guest')->group(function () {
     Route::post('password/email', [ResetPasswordController::class, 'sendResetLinkEmail'])->name('password.send-link');
     Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('password/reset', [ResetPasswordController::class, 'resetPassword'])->name('password.update');
+
+    Route::get('/verification/verify', [VerificationCodeController::class, 'showForm'])->name('verification.code.form');
+    Route::post('/verification/verify', [VerificationCodeController::class, 'verify'])->name('verification.code.verify');
+    Route::get('/verification/resend', [VerificationCodeController::class, 'resend'])->name('verification.code.resend');
 });
 
 

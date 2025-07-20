@@ -71,7 +71,8 @@
                                     <th>Empresa</th>
                                 @endif
                                 <th>Categoría</th>
-                                <th class="text-end">Precio</th>
+                                {{-- CAMBIO AQUÍ: Encabezado de la columna actualizado --}}
+                                <th class="text-end">Precio / Oferta</th>
                                 <th class="text-center">Stock</th>
                                 <th class="text-center" style="width: 120px;">Acciones</th>
                             </tr>
@@ -91,19 +92,45 @@
                                 </td>
                                 <td>
                                     <div class="fw-bold">{{ $producto->nombre }}</div>
-                                    <!-- <small class="text-muted d-block d-md-none">{{ $producto->categoria->nombre ?? 'N/A' }}</small> -->
                                 </td>
                                 @if(auth()->user()->hasRole('super_admin'))
                                     <td class="small text-muted">{{ $producto->empresa->nombre ?? 'N/A' }}</td>
                                 @endif
                                 <td>{{ $producto->categoria->nombre ?? 'N/A' }}</td>
-                                <!-- <td class="d-none d-md-table-cell">{{ $producto->categoria->nombre ?? 'N/A' }}</td> -->
-                                <td class="text-end fw-bold text-success">S/.{{ number_format($producto->precio, 2) }}</td>
-                                <td class="text-center">
-                                    <span class="badge {{ ($producto->stock ?? 0) > 0 ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis' }} rounded-pill">
-                                        {{ $producto->stock ?? 'Ilimitado' }}
-                                    </span>
+
+                                {{-- CAMBIO AQUÍ: Lógica de visualización para el precio --}}
+                                <td class="text-end">
+                                    @if($producto->is_on_sale)
+                                        {{-- Si está en oferta, muestra ambos precios --}}
+                                        <div>
+                                            <span class="fw-bold text-danger">S/.{{ number_format($producto->precio_oferta, 2) }}</span>
+                                            <del class="d-block text-muted small">S/.{{ number_format($producto->precio, 2) }}</del>
+                                        </div>
+                                    @else
+                                        {{-- Si no, muestra solo el precio normal --}}
+                                        <span class="fw-bold">S/.{{ number_format($producto->precio, 2) }}</span>
+                                    @endif
                                 </td>
+
+                                <td class="text-center">
+                                    @if($producto->stock <= 0)
+                                        {{-- Estado 1: Agotado --}}
+                                        <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill" data-bs-toggle="tooltip" title="Producto sin stock">
+                                            Agotado
+                                        </span>
+                                    @elseif($producto->is_low_stock)
+                                        {{-- Estado 2: Stock Bajo (NUEVO) --}}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill" data-bs-toggle="tooltip" title="¡Stock bajo! Quedan pocas unidades.">
+                                            {{ $producto->stock }} <i class="fa-solid fa-triangle-exclamation ms-1"></i>
+                                        </span>
+                                    @else
+                                        {{-- Estado 3: Stock Normal --}}
+                                        <span class="badge bg-success-subtle text-success-emphasis rounded-pill" data-bs-toggle="tooltip" title="Unidades en stock">
+                                            {{ $producto->stock }}
+                                        </span>
+                                    @endif
+                                </td>
+
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         @can('producto-edit')

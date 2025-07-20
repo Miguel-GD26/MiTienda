@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Notifications\ResetPasswordNotification;
 
 class ResetPasswordController extends Controller
 {
@@ -22,6 +21,8 @@ class ResetPasswordController extends Controller
     {
         $request->validate(['email' => 'required|email|exists:users,email']);
 
+        $user = User::where('email', $request->email)->first();
+
         $token = Str::random(60);
 
         DB::table('password_reset_tokens')->updateOrInsert(
@@ -29,11 +30,14 @@ class ResetPasswordController extends Controller
             ['token' => $token, 'created_at' => now()]
         );
 
-        Mail::send('emails.reset-password', ['token' => $token], function ($message) use ($request) {
-            $message->to($request->email)->subject('Recuperación de contraseña - IncanatoApps');
-        });
+        try {
+            $user->notify(new ResetPasswordNotification($token));
+        } catch (\Exception $e) {
+            \Log::error('Error al enviar email de reseteo: ' . $e->getMessage());
+            return back()->with('error', 'No se pudo enviar el enlace de recuperación. Por favor, inténtelo de nuevo más tarde.');
+        }
 
-        return back()->with('mensaje', 'Te hemos enviado un enlace de recuperación.');
+        return back()->with('mensaje', 'Te hemos enviado un enlace de recuperación a tu correo.');
     }
 
     public function showResetForm($token)
@@ -51,15 +55,15 @@ class ResetPasswordController extends Controller
 
         $reset = DB::table('password_reset_tokens')->where('token', $request->token)->first();
 
-        if (!$reset || $reset->email !== $request->email) {
-            return back()->withErrors(['email' => 'Token inválido o expirado.']);
+        $tokenCreatedAt = \Carbon\Carbon::parse($reset->created_at);
+        if (!$reset || $reset->email !== $request->email || $tokenCreatedAt->addMinutes(config('auth.passwords.users.expire'))->isPast()) {
+            return back()->withErrors(['email' => 'El token de restablecimiento es inválido o ha expirado.']);
         }
 
         User::where('email', $request->email)->update(['password' => Hash::make($request->input('password'))]);
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        return redirect()->route('login')->with('mensaje', 'Tu contraseña ha sido restablecida.');
+        return redirect()->route('login')->with('mensaje', 'Tu contraseña ha sido restablecida con éxito.');
     }
-
 }

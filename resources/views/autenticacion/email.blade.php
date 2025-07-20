@@ -67,6 +67,9 @@
               </button>
             </div>
           </form>
+          <div class="card-footer text-center py-3">
+                    <a href="{{ route('login') }}">Volver al inicio de sesión</a>
+                </div>
           {{-- FIN DEL FORMULARIO --}}
         </div>
       </div>

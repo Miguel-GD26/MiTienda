@@ -48,6 +48,8 @@
     <!--end::Third Party Plugin(Bootstrap Icons)-->
     <!--begin::Required Plugin(AdminLTE)-->
     @vite(['resources/css/adminlte.css'])
+    @stack('estilos')
+    
     <!--end::Required Plugin(AdminLTE)-->
   </head>
   <!--end::Head-->
@@ -58,11 +60,14 @@
     </div>
     <!-- /.login-box -->
     <!--begin::Third Party Plugin(OverlayScrollbars)-->
+    @stack('scripts')
+    
     <script
       src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
       integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ="
       crossorigin="anonymous"
     ></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <!--end::Third Party Plugin(OverlayScrollbars)--><!--begin::Required Plugin(popperjs for Bootstrap 5)-->
     <script
       src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
@@ -75,7 +80,6 @@
       integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
       crossorigin="anonymous"
     ></script>
-    <script src="//unpkg.com/alpinejs" defer></script>
     <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
     @vite(['resources/js/adminlte.js'])
     <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->

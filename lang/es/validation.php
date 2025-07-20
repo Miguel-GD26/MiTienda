@@ -17,6 +17,7 @@ return [
     'boolean'              => 'El campo :attribute debe ser verdadero o falso.',
     'confirmed'            => 'La confirmación de :attribute no coincide.',
     'email'                => 'El campo :attribute debe ser un correo válido.',
+    'exists'               => 'El campo :attribute no existe en nuestros registros.',
     'required'             => 'El campo :attribute es obligatorio.',
     'unique'               => 'El campo :attribute ya ha sido registrado.',
     'min'                  => [
@@ -36,5 +37,5 @@ return [
     'string' => 'El campo :attribute debe contener al menos :min caracteres.',
     'array' => 'El campo :attribute debe tener al menos :min elementos.',
     ],
-
+    'digits' => 'El campo :attribute debe tener exactamente :digits dígitos.',
 ];

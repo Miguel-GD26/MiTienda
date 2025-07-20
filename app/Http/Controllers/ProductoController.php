@@ -11,16 +11,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-// Si estás usando un Facade específico para Cloudinary, impórtalo.
-// Ejemplo: use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-
 class ProductoController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Muestra la lista de productos del panel de administración.
-     */
     public function index(Request $request)
     {
         $this->authorize('producto-list');
@@ -46,9 +40,6 @@ class ProductoController extends Controller
         return view('producto.index', compact('productos', 'empresas'));
     }
 
-    /**
-     * Muestra el formulario para crear un nuevo producto.
-     */
     public function create()
     {
         $this->authorize('producto-create');
@@ -66,7 +57,6 @@ class ProductoController extends Controller
                     ->with('warning', '¡Atención! Para crear un producto, primero debe registrar al menos una empresa.');
             }
         } else {
-            // Validación para Admin de Empresa
             if (!$user->empresa_id) {
                 return redirect()->route('productos.index')
                     ->with('error', 'No tienes una empresa asignada para crear productos.');
@@ -92,7 +82,6 @@ class ProductoController extends Controller
 
         $empresa_id = $user->hasRole('super_admin') ? $request->empresa_id : $user->empresa_id;
 
-        // Validación para super_admin
         if ($user->hasRole('super_admin')) {
             $request->validate([
                 'empresa_id' => 'required|exists:empresas,id'
@@ -100,6 +89,10 @@ class ProductoController extends Controller
                 'empresa_id.required' => 'Debe seleccionar una empresa.',
                 'empresa_id.exists' => 'La empresa seleccionada no existe.',
             ]);
+        }
+        
+        if ($request->input('precio_oferta') === '') {
+            $request->merge(['precio_oferta' => null]);
         }
 
         $request->validate([
@@ -110,6 +103,7 @@ class ProductoController extends Controller
                 Rule::unique('productos')->where(fn ($query) => $query->where('empresa_id', $empresa_id)),
             ],
             'precio' => 'required|numeric|min:0',
+            'precio_oferta' => 'nullable|numeric|min:0|lt:precio',
             'stock' => 'nullable|integer|min:0',
             'categoria_id' => [
                 'required',
@@ -121,6 +115,8 @@ class ProductoController extends Controller
             'nombre.unique' => 'Ya existe un producto con este nombre en la empresa.',
             'precio.required' => 'El precio es obligatorio.',
             'precio.numeric' => 'El precio debe ser un número.',
+            'precio_oferta.numeric' => 'El precio de oferta debe ser un número.',
+            'precio_oferta.lt' => 'El precio de oferta debe ser menor que el precio normal.',
             'stock.integer' => 'El stock debe ser un número entero.',
             'categoria_id.required' => 'Debe seleccionar una categoría.',
             'categoria_id.exists' => 'La categoría no es válida o no pertenece a esta empresa.',
@@ -149,18 +145,13 @@ class ProductoController extends Controller
         $this->authorize('producto-edit', $producto);
         $user = Auth::user();
         
-        // Obtenemos las categorías que pertenecen a la misma empresa que el producto.
         $categorias = Categoria::where('empresa_id', $producto->empresa_id)->orderBy('nombre')->get();
-        
-        // Inicializamos la variable de empresas como una colección vacía.
         $empresas = collect();
 
-        // SI el usuario es Super Admin, obtenemos TODAS las empresas para el select.
         if ($user->hasRole('super_admin')) {
             $empresas = Empresa::orderBy('nombre')->get();
         }
 
-        // Ahora pasamos TODAS las variables necesarias a la vista.
         return view('producto.action', compact('producto', 'categorias', 'empresas'));
     }
 
@@ -169,6 +160,10 @@ class ProductoController extends Controller
     {
         $this->authorize('producto-edit', $producto);
         $empresa_id = $producto->empresa_id;
+        
+        if ($request->input('precio_oferta') === '') {
+            $request->merge(['precio_oferta' => null]);
+        }
 
         $request->validate([
             'nombre' => [
@@ -178,7 +173,8 @@ class ProductoController extends Controller
                 Rule::unique('productos')->where(fn ($query) => $query->where('empresa_id', $empresa_id))->ignore($producto->id),
             ],
             'precio' => 'required|numeric|min:0',
-            'stock' => 'nullable|integer|min:0',
+            'precio_oferta' => 'nullable|numeric|min:0|lt:precio',
+            'stock' => 'required|integer|min:0',
             'categoria_id' => [
                 'required',
                 Rule::exists('categorias', 'id')->where('empresa_id', $empresa_id),
@@ -189,6 +185,8 @@ class ProductoController extends Controller
             'nombre.unique' => 'Ya existe otro producto con ese nombre en la empresa.',
             'precio.required' => 'El precio es obligatorio.',
             'precio.numeric' => 'El precio debe ser un número.',
+            'precio_oferta.numeric' => 'El precio de oferta debe ser un número.',
+            'precio_oferta.lt' => 'El precio de oferta debe ser menor que el precio normal.',
             'stock.integer' => 'El stock debe ser un número entero.',
             'categoria_id.required' => 'Debe seleccionar una categoría.',
             'categoria_id.exists' => 'La categoría no es válida o no pertenece a esta empresa.',
@@ -209,6 +207,10 @@ class ProductoController extends Controller
             ]);
             $productData['imagen_url'] = $uploadedFile['public_id'];
         }
+        
+        if (!isset($productData['precio_oferta'])) {
+            $productData['precio_oferta'] = null;
+        }
 
         $producto->update($productData);
 
@@ -228,17 +230,32 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('mensaje', 'Producto eliminado con éxito.');
     }
 
-    // --- MÉTODOS PÚBLICOS (TIENDA) ---
+    private function getCartItemsForView()
+    {
+        $user = Auth::user();
 
-    public function mostrarTienda(Empresa $empresa)
+        if ($user && $user->cart) {
+            // Obtenemos los items y los indexamos por producto_id para búsqueda rápida.
+            return $user->cart->items->keyBy('producto_id');
+        }
+
+        // Si no hay usuario o no tiene carrito, devolvemos una colección vacía.
+        return collect();
+    }
+
+     public function mostrarTienda(Empresa $empresa)
     {
         $productos = $empresa->productos()->with('categoria')->paginate(9);
         $categorias = $empresa->categorias()->whereHas('productos')->get();
         
+        // MODIFICADO: Usamos nuestro nuevo método para obtener los items del carrito
+        $cartItems = $this->getCartItemsForView();
+
         return view('tienda.index', [
             'tienda' => $empresa,
             'productos' => $productos,
             'categorias' => $categorias,
+            'cartItems' => $cartItems, // Pasamos los datos correctos
         ]);
     }
 
@@ -249,22 +266,22 @@ class ProductoController extends Controller
         }
         
         $productos = $categoria->productos()->paginate(9);
-        $categorias = $empresa->categorias()
-            ->withCount('productos') 
-            ->whereHas('productos')
-            ->get();
+        $categorias = $empresa->categorias()->withCount('productos')->whereHas('productos')->get();
         
+        // MODIFICADO: Usamos nuestro nuevo método para obtener los items del carrito
+        $cartItems = $this->getCartItemsForView();
+
         return view('tienda.index', [
             'tienda' => $empresa,
             'productos' => $productos,
             'categorias' => $categorias,
             'categoriaActual' => $categoria,
+            'cartItems' => $cartItems, // Pasamos los datos correctos
         ]);
     }
 
-     public function buscarPublicoAjax(Request $request, Empresa $empresa)
+    public function buscarPublicoAjax(Request $request, Empresa $empresa)
     {
-        // --- Lógica de consulta (sin cambios) ---
         $query = $empresa->productos()->with('categoria');
         if ($request->filled('categoria_id')) {
             $query->where('categoria_id', $request->categoria_id);
@@ -274,16 +291,18 @@ class ProductoController extends Controller
         }
         $productos = $query->paginate(12)->appends($request->query());
 
-        // --- Lógica de categorías (ahora también se ejecuta aquí) ---
         $categoriasParaFiltro = $empresa->categorias()->whereHas('productos')->get();
 
-        // --- Renderizar la vista parcial de productos ---
+        // MODIFICADO: Usamos nuestro nuevo método para obtener los items del carrito
+        $cartItems = $this->getCartItemsForView();
+
+        // MODIFICADO: Pasamos $cartItems a la vista parcial
         $productsHtml = view('tienda.producto', [
             'productos' => $productos,
-            'tienda' => $empresa
+            'tienda' => $empresa,
+            'cartItems' => $cartItems, // Pasamos los datos correctos a la vista parcial
         ])->render();
 
-        // --- Devolver una respuesta JSON con ambos datos ---
         return response()->json([
             'products_html' => $productsHtml,
             'categories' => $categoriasParaFiltro

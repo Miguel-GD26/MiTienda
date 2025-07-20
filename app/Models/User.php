@@ -24,6 +24,9 @@
             'password',
             'empresa_id',
             'activo',
+            'email_verified_at',
+            'provider_name', // <-- Añadir esta línea
+            'provider_id',   // <-- Añadir esta línea
         ];
 
         /**
@@ -62,6 +65,10 @@
         public function cliente()
         {
             return $this->hasOne(Cliente::class);
+        }
+
+        public function cart() {
+            return $this->hasOne(Cart::class);
         }
 
     }

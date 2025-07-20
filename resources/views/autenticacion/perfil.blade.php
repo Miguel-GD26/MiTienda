@@ -32,23 +32,25 @@
                                 <div class="col-md-6 mb-3">
                                     <label for="email" class="form-label">Email</label>
                                     <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                     id="email" name="email" value="{{ old('email', $registro->email ?? '') }}" required>
+                                     id="email" name="email" value="{{ old('email', $registro->email ?? '') }}" readonly>
                                      @error('email') <small class="text-danger">{{$message}}</small> @enderror
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="password" class="form-label">Nueva Contraseña</label>
-                                    <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                     id="password" name="password" placeholder="Dejar en blanco para no cambiar">
-                                     @error('password') <small class="text-danger">{{$message}}</small> @enderror
+                            @if(!$isSocialUser)
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="password" class="form-label">Nueva Contraseña</label>
+                                        <input type="password" class="form-control @error('password') is-invalid @enderror"
+                                        id="password" name="password" placeholder="Dejar en blanco para no cambiar">
+                                        @error('password') <small class="text-danger">{{$message}}</small> @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="password_confirmation" class="form-label">Confirmar Contraseña</label>
+                                        <input type="password" class="form-control"
+                                        id="password_confirmation" name="password_confirmation">
+                                    </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="password_confirmation" class="form-label">Confirmar Contraseña</label>
-                                    <input type="password" class="form-control"
-                                     id="password_confirmation" name="password_confirmation">
-                                </div>
-                            </div>
+                            @endif
 
                             {{-- SECCIÓN DE DATOS DE LA EMPRESA (Visible solo si es admin y tiene empresa) --}}
                             @if(isset($empresa))
@@ -96,7 +98,6 @@
                                     </div>
                                 </div>
                             @endif
-
                             <hr>
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                                 <a href="{{ route('dashboard') }}" class="btn btn-secondary me-md-2">Cancelar</a>
