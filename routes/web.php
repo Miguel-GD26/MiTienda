@@ -54,17 +54,6 @@ Route::middleware('guest')->group(function () {
     Route::get('login', fn() => view('autenticacion.login'))->name('login');
     Route::post('login', [AuthController::class, 'login'])->name('login.post');
 
-    Route::get('/auth/google/redirect', [SocialiteController::class, 'redirect'])->name('login.google.redirect');
-
-    // 2. Google devuelve al usuario a esta ruta
-    Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->name('login.google.callback');
-
-    // 3. Muestra el formulario para completar el perfil si es un usuario nuevo
-    Route::get('/auth/google/complete', [SocialiteController::class, 'showCompleteForm'])->name('login.google.complete');
-
-    // 4. Procesa el formulario del paso 3
-    Route::post('/auth/google/complete', [SocialiteController::class, 'processCompleteForm'])->name('login.google.complete.store');
-
     // Registro
     Route::get('/registro', [RegisterController::class, 'showRegistroForm'])->name('registro');
     Route::post('/registro', [RegisterController::class, 'registrar'])->name('registro.store');
@@ -79,6 +68,17 @@ Route::middleware('guest')->group(function () {
     Route::post('/verification/verify', [VerificationCodeController::class, 'verify'])->name('verification.code.verify');
     Route::get('/verification/resend', [VerificationCodeController::class, 'resend'])->name('verification.code.resend');
 });
+
+    Route::get('/auth/google/redirect', [SocialiteController::class, 'redirect'])->name('login.google.redirect');
+
+    // 2. Google devuelve al usuario a esta ruta
+    Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->name('login.google.callback');
+
+    // 3. Muestra el formulario para completar el perfil si es un usuario nuevo
+    Route::get('/auth/google/complete', [SocialiteController::class, 'showCompleteForm'])->name('login.google.complete');
+
+    // 4. Procesa el formulario del paso 3
+    Route::post('/auth/google/complete', [SocialiteController::class, 'processCompleteForm'])->name('login.google.complete.store');
 
 
 // 3. RUTAS PARA AUTENTICADOS (Requieren que el usuario haya iniciado sesión)
