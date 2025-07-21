@@ -94,5 +94,26 @@
     if (itemPerfil) {
         itemPerfil.classList.add('active');
     }
+
+  const camposTelefono = ['cliente_telefono'];
+
+  camposTelefono.forEach(id => {
+    const input = document.getElementById(id);
+
+    if (input) {
+      // Al escribir: solo números, máx. 9
+      input.addEventListener('input', () => {
+        input.value = input.value.replace(/\D/g, '').slice(0, 9);
+      });
+
+      // Al pegar: limpiar texto no numérico y limitar a 9
+      input.addEventListener('paste', e => {
+        e.preventDefault();
+        const texto = (e.clipboardData || window.clipboardData).getData('text');
+        const limpio = texto.replace(/\D/g, '').slice(0, 9);
+        document.execCommand('insertText', false, limpio);
+      });
+    }
+  });
 </script>
 @endpush

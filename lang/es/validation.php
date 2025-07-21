@@ -20,6 +20,7 @@ return [
     'exists'               => 'El campo :attribute no existe en nuestros registros.',
     'required'             => 'El campo :attribute es obligatorio.',
     'unique'               => 'El campo :attribute ya ha sido registrado.',
+    'regex' => 'El campo :attribute debe contener exactamente 9 dígitos numéricos.',
     'min'                  => [
         'string'  => 'El campo :attribute debe tener al menos :min caracteres.',
     ],
@@ -38,4 +39,5 @@ return [
     'array' => 'El campo :attribute debe tener al menos :min elementos.',
     ],
     'digits' => 'El campo :attribute debe tener exactamente :digits dígitos.',
+    'required_if' => 'El campo :attribute es obligatorio cuando :other es :value.',
 ];

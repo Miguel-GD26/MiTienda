@@ -67,18 +67,13 @@ Route::middleware('guest')->group(function () {
     Route::get('/verification/verify', [VerificationCodeController::class, 'showForm'])->name('verification.code.form');
     Route::post('/verification/verify', [VerificationCodeController::class, 'verify'])->name('verification.code.verify');
     Route::get('/verification/resend', [VerificationCodeController::class, 'resend'])->name('verification.code.resend');
-});
 
     Route::get('/auth/google/redirect', [SocialiteController::class, 'redirect'])->name('login.google.redirect');
-
-    // 2. Google devuelve al usuario a esta ruta
     Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->name('login.google.callback');
-
-    // 3. Muestra el formulario para completar el perfil si es un usuario nuevo
     Route::get('/auth/google/complete', [SocialiteController::class, 'showCompleteForm'])->name('login.google.complete');
-
-    // 4. Procesa el formulario del paso 3
     Route::post('/auth/google/complete', [SocialiteController::class, 'processCompleteForm'])->name('login.google.complete.store');
+
+});
 
 
 // 3. RUTAS PARA AUTENTICADOS (Requieren que el usuario haya iniciado sesión)
@@ -155,7 +150,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Gestión de Clientes (Admins)
     Route::resource('clientes', ClienteController::class)->middleware('role:admin|super_admin')->only(['index', 'show', 'destroy']);
-     Route::get('/mis-clientes', [ClienteController::class, 'misClientes'])->name('clientes.mitienda');
+    Route::get('/mis-clientes', [ClienteController::class, 'misClientes'])->name('clientes.mitienda');
     // Gestión de Empresas (SOLO Super Admin)
     Route::resource('empresas', EmpresaController::class);
 });

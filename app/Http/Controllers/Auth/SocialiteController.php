@@ -72,9 +72,9 @@ class SocialiteController extends Controller
         $validatedData = $request->validate([
             'tipo_usuario' => ['required', 'in:cliente,empresa'],
             'empresa_nombre' => ['required_if:tipo_usuario,empresa', 'nullable', 'string', 'max:255', 'unique:empresas,nombre'],
-            'empresa_telefono_whatsapp' => ['required_if:tipo_usuario,empresa', 'nullable', 'string', 'digits:9'],
+            'empresa_telefono_whatsapp' => ['required_if:tipo_usuario,empresa', 'digits:9'],
             'empresa_rubro' => ['required_if:tipo_usuario,empresa', 'nullable', 'string', 'max:255'],
-            'cliente_telefono' => ['required_if:tipo_usuario,cliente', 'nullable', 'string', 'digits:9'],
+            'cliente_telefono' => ['required_if:tipo_usuario,cliente', 'digits:9'],
         ]);
 
         $user = null;

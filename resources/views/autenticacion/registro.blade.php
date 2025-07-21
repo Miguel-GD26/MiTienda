@@ -133,6 +133,7 @@
                   <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-phone"></i></span>
                     <input id="cliente_telefono" type="text" name="cliente_telefono" value="{{ old('cliente_telefono') }}" class="form-control @error('cliente_telefono') is-invalid @enderror" placeholder="Número de contacto">
+                  
                   </div>
                   @error('cliente_telefono')
                     <div class="text-danger small mt-1">{{ $message }}</div>
@@ -203,3 +204,27 @@
   </div>
 </div>
 @endsection
+@push('scripts')
+<script>
+  const camposTelefono = ['cliente_telefono', 'empresa_telefono_whatsapp'];
+
+  camposTelefono.forEach(id => {
+    const input = document.getElementById(id);
+
+    if (input) {
+      // Al escribir: solo números, máx. 9
+      input.addEventListener('input', () => {
+        input.value = input.value.replace(/\D/g, '').slice(0, 9);
+      });
+
+      // Al pegar: limpiar texto no numérico y limitar a 9
+      input.addEventListener('paste', e => {
+        e.preventDefault();
+        const texto = (e.clipboardData || window.clipboardData).getData('text');
+        const limpio = texto.replace(/\D/g, '').slice(0, 9);
+        document.execCommand('insertText', false, limpio);
+      });
+    }
+  });
+</script>
+@endpush

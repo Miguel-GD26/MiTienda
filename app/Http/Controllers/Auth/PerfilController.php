@@ -47,12 +47,12 @@ class PerfilController extends Controller
         if ($user->hasRole(['super_admin', 'admin']) && $user->empresa) {
             $rules['empresa_nombre'] = ['required', 'string', 'max:255', Rule::unique('empresas', 'nombre')->ignore($user->empresa_id)];
             $rules['empresa_rubro'] = 'nullable|string|max:255';
-            $rules['empresa_telefono_whatsapp'] = 'nullable|string|max:20';
+            $rules['empresa_telefono_whatsapp'] = ['required', 'regex:/^\d{9}$/'];
             $rules['empresa_logo'] = 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048';
         }
 
         elseif ($user->hasRole('cliente')) {
-            $rules['cliente_telefono'] = 'required|string|max:9';
+            $rules['cliente_telefono'] = ['required', 'regex:/^\d{9}$/'];
         }
         
         $validatedData = $request->validate($rules);
