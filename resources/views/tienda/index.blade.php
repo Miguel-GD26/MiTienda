@@ -3,6 +3,11 @@
 
 @push('estilos')
 <style>
+
+    .product-card-intuitive {
+        margin-bottom: 1.5rem;
+    }
+
     .tienda-header {
         background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.8)), url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2073&auto=format&fit=crop');
         background-size: cover;
