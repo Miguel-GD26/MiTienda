@@ -37,8 +37,9 @@
         background-color: #ffc107;
     }
 
+
     .badge-lowstock {
-        transform: translateX(100%) translateY(700%);
+        transform: translate(100%, 700%);
         background-color: #E67E22;
         color: white;
     }

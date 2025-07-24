@@ -11087,6 +11087,7 @@ h6,
 
 /* --- Contenedor de Imagen y Badge --- */
 .card-img-container {
+  margin-top: 15px;
   position: relative;
   overflow: hidden;
   border-top-left-radius: 12px;
