@@ -45,7 +45,7 @@
          * 1. #navbarCollapse .navbar-nav .nav-link -> Para enlaces DENTRO del menú hamburguesa.
          * 2. .navbar-dark .d-lg-none .nav-link    -> Para los iconos de Usuario y Carrito FUERA del menú.
         */
-        #navbarCollapse ,
+        #navbarCollapse,
         .navbar-dark .d-lg-none .nav-link {
             /* 
               Este es el color estándar de un enlace inactivo en navbar-dark.
