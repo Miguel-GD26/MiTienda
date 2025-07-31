@@ -1,7 +1,7 @@
 @extends('plantilla.app')
+
 @push('estilos')
 <style>
-  /* === FIX PARA MODALES EN iOS SAFARI === */
   .modal {
     z-index: 1060 !important;
   }
@@ -15,11 +15,11 @@
 </style>
 @endpush
 
+
 @section('contenido')
 <main class="app-main">
     <div class="container-fluid mt-4">
 
-        <!-- Cabecera con Título y Botón de Nuevo -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="h3 mb-0">Listado de Usuarios</h2>
             @can('user-create')
@@ -98,24 +98,20 @@
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         @can('user-edit')
-                                        <a href="{{ route('usuarios.edit', $reg->id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
-                                            <i class="fa-solid fa-pencil"></i>
-                                        </a>
+                                            <a href="{{ route('usuarios.edit', $reg->id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
+                                                <i class="fa-solid fa-pencil"></i>
+                                            </a>
                                         @endcan
-                                        {{-- Botón para Activar/Desactivar --}}
+                                        
                                         @can('user-activate')
-                                            <!-- 1. El SPAN se encarga del Tooltip -->
                                             <span data-bs-toggle="tooltip" title="{{ $reg->activo ? 'Desactivar' : 'Activar' }}">
-                                                <!-- 2. El BOTÓN (sin tooltip) se encarga del Modal. Añadido type="button" por seguridad. -->
                                                 <button type="button" class="btn btn-sm {{ $reg->activo ? 'btn-outline-warning' : 'btn-outline-success' }}" data-bs-toggle="modal" data-bs-target="#modal-toggle-{{$reg->id}}">
                                                     <i class="fa-solid {{ $reg->activo ? 'fa-ban' : 'fa-circle-check' }}"></i>
                                                 </button>
                                             </span>
                                         @endcan
 
-                                        {{-- Botón para Eliminar (probablemente tenga el mismo error) --}}
                                         @can('user-delete')
-                                            <!-- Aplica la misma solución aquí -->
                                             <span data-bs-toggle="tooltip" title="Eliminar">
                                                 <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modal-eliminar-{{$reg->id}}">
                                                     <i class="fa-solid fa-trash-can"></i>
@@ -125,12 +121,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            @can('user-delete')
-                                @include('usuario.delete')
-                            @endcan
-                            @can('user-activate')
-                                @include('usuario.activate')
-                            @endcan
+                            {{-- Los @include para los modales han sido removidos de aquí --}}
                             @empty
                             <tr>
                                 <td colspan="{{ auth()->user()->hasRole('super_admin') ? '7' : '6' }}">
@@ -153,15 +144,23 @@
         </div>
     </div>
 </main>
+
+@foreach ($registros as $reg)
+    @can('user-delete')
+        @include('usuario.delete', ['reg' => $reg])
+    @endcan
+    @can('user-activate')
+        @include('usuario.activate', ['reg' => $reg])
+    @endcan
+@endforeach
+
 @endsection
 
 @push('scripts')
 <script>
-    // Activar item del sidebar
     document.getElementById('mnuSeguridad').classList.add('menu-open');
     document.getElementById('itemUsuario').classList.add('active');
 
-    // Inicializar todos los tooltips de Bootstrap en la página
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
