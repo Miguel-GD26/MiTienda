@@ -87,17 +87,25 @@
                                             <i class="fa-solid fa-pencil"></i>
                                         </a>
                                         @endcan
+                                        {{-- Botón para Activar/Desactivar --}}
                                         @can('user-activate')
-                                        <button class="btn btn-sm {{ $reg->activo ? 'btn-outline-warning' : 'btn-outline-success' }}" data-bs-toggle="modal"
-                                            data-bs-target="#modal-toggle-{{$reg->id}}" data-bs-toggle="tooltip" title="{{ $reg->activo ? 'Desactivar' : 'Activar' }}">
-                                            <i class="fa-solid {{ $reg->activo ? 'fa-ban' : 'fa-circle-check' }}"></i>
-                                        </button>
+                                            <!-- 1. El SPAN se encarga del Tooltip -->
+                                            <span data-bs-toggle="tooltip" title="{{ $reg->activo ? 'Desactivar' : 'Activar' }}">
+                                                <!-- 2. El BOTÓN (sin tooltip) se encarga del Modal. Añadido type="button" por seguridad. -->
+                                                <button type="button" class="btn btn-sm {{ $reg->activo ? 'btn-outline-warning' : 'btn-outline-success' }}" data-bs-toggle="modal" data-bs-target="#modal-toggle-{{$reg->id}}">
+                                                    <i class="fa-solid {{ $reg->activo ? 'fa-ban' : 'fa-circle-check' }}"></i>
+                                                </button>
+                                            </span>
                                         @endcan
+
+                                        {{-- Botón para Eliminar (probablemente tenga el mismo error) --}}
                                         @can('user-delete')
-                                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
-                                            data-bs-target="#modal-eliminar-{{$reg->id}}" data-bs-toggle="tooltip" title="Eliminar">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </button>
+                                            <!-- Aplica la misma solución aquí -->
+                                            <span data-bs-toggle="tooltip" title="Eliminar">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modal-eliminar-{{$reg->id}}">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </span>
                                         @endcan
                                     </div>
                                 </td>
