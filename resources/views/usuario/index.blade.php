@@ -1,4 +1,19 @@
 @extends('plantilla.app')
+@push('estilos')
+<style>
+  /* === FIX PARA MODALES EN iOS SAFARI === */
+  .modal {
+    z-index: 1060 !important;
+  }
+  .modal.fade.show {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  .modal-backdrop {
+    z-index: 1050 !important;
+  }
+</style>
+@endpush
 
 @section('contenido')
 <main class="app-main">
