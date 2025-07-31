@@ -7,7 +7,6 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="Free Website Template" name="keywords">
     <meta content="Free Website Template" name="description">
-
     
     <!-- Favicon -->
     <link href="{{asset('assets/img/ventas.png')}}" rel="icon">
@@ -28,6 +27,36 @@
     <script src="//unpkg.com/alpinejs" defer></script>
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
+    <style>
+        .navbar-logo {
+            height: 60px;
+            transition: height 0.2s ease-in-out; /* Opcional: una suave transición */
+        }
+
+        @media (min-width: 992px) {
+            .navbar-logo {
+                height: 80px;
+            }
+        }
+         @media (max-width: 991.98px) {
+
+        /* 
+         * Combina las dos reglas:
+         * 1. #navbarCollapse .navbar-nav .nav-link -> Para enlaces DENTRO del menú hamburguesa.
+         * 2. .navbar-dark .d-lg-none .nav-link    -> Para los iconos de Usuario y Carrito FUERA del menú.
+        */
+        #navbarCollapse ,
+        .navbar-dark .d-lg-none .nav-link {
+            /* 
+              Este es el color estándar de un enlace inactivo en navbar-dark.
+              Usamos !important para asegurar que sobreescriba cualquier otro estilo.
+            */
+            color: rgba(255, 255, 255, 1) !important; 
+            font-weight: normal;
+        }
+    }
+    </style>
+
      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <!-- Customized Bootstrap Stylesheet -->
@@ -36,8 +65,6 @@
     @vite(['resources/css/welcome.css'])
     @stack('styles')
 
-    
-    @push('scripts')
     <script>
         // Nos aseguramos de que el DOM esté completamente cargado
         document.addEventListener('DOMContentLoaded', function () {
@@ -69,7 +96,7 @@
             }
         });
     </script>
-    @endpush
+
 
 </head>
 
