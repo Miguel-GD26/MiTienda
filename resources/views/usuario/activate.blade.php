@@ -1,20 +1,21 @@
-<div class="modal fade" id="modal-toggle-{{$reg->id}}" tabindex="-1" role="dialog"
-    aria-labelledby="exampleModalLabel">
+<div class="modal fade" id="modal-toggle-{{$reg->id}}" tabindex="-1" aria-labelledby="modalToggleLabel-{{$reg->id}}" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content {{$reg->activo ? 'bg-warning' : 'bg-success'}}">
-            <form action="{{route('usuarios.toggle', $reg->id)}}" method="post">
+        <div class="modal-content {{ $reg->activo ? 'bg-warning text-dark' : 'bg-success text-white' }}">
+            <form action="{{ route('usuarios.toggle', $reg->id) }}" method="post">
                 @csrf
                 @method('PATCH')
                 <div class="modal-header">
-                    <h4 class="modal-title">{{$reg->activo ? 'Desactivar ' : 'Activar '}} registro</h4>
-                    </button>
+                    <h5 class="modal-title" id="modalToggleLabel-{{$reg->id}}">
+                        {{ $reg->activo ? 'Desactivar Registro' : 'Activar Registro' }}
+                    </h5>
+                    <button type="button" class="btn-close {{ $reg->activo ? '' : 'btn-close-white' }}" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    ¿Usted desea  {{$reg->activo ? 'desactivar ' : 'activar '}} el registro {{$reg->name}} ?
+                    ¿Estás seguro de que deseas {{ $reg->activo ? 'desactivar' : 'activar' }} el registro de {{ $reg->name }}?
                 </div>
                 <div class="modal-footer justify-content-between">
                     <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-outline-light">{{$reg->activo ? 'Desactivar ' : 'Activar '}}</button>
+                    <button type="submit" class="btn btn-light">{{ $reg->activo ? 'Sí, Desactivar' : 'Sí, Activar' }}</button>
                 </div>
             </form>
         </div>
