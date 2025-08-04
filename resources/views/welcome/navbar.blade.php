@@ -9,8 +9,9 @@
         <!-- VERSIÓN MÓVIL (VISIBLE SÓLO EN CELULAR, FUERA DEL HAMBURGUESA) -->
         <div class="d-flex align-items-center d-lg-none">
             @guest
-                <a href="{{ route('login', ['redirect' => request()->fullUrl()]) }}" class="nav-link text-white">
-                    <i class="fa-solid fa-right-to-bracket fa-lg"></i>
+                <a href="{{ route('login', ['redirect' => request()->fullUrl()]) }}" class="nav-link text-white" >
+                    <i class="fa-solid fa-right-to-bracket fa-lg"></i> Iniciar Sesión
+                    
                 </a>
             @endguest
 
