@@ -28,6 +28,7 @@
     <!--begin::Required Plugin(AdminLTE)-->
     @vite(['resources/css/adminlte.css'])
     <!--end::Required Plugin(AdminLTE)-->
+    @livewireStyles
     @stack('estilos')
 
   </head>
@@ -109,6 +110,7 @@
     </script>
     <!--end::OverlayScrollbars Configure-->
     <!--end::Script-->
+    @livewireScripts
     @stack('scripts')
 
   </body>

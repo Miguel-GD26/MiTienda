@@ -1,169 +1,44 @@
+{{-- resources/views/usuario/index.blade.php --}}
 @extends('plantilla.app')
+
+@section('contenido')
+    {{-- Simplemente llama a tu componente Livewire --}}
+    @livewire('user-management')
+@endsection
 
 @push('estilos')
 <style>
-  .modal {
-    z-index: 1060 !important;
-  }
-  .modal.fade.show {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-  }
-  .modal-backdrop {
-    z-index: 1050 !important;
-  }
+/* 
+  Estos estilos se aplicarán a cualquier .form-check-input en la página,
+  incluyendo el que está dentro de nuestro modal de Livewire.
+*/
+.form-check-input {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+}
+
+.form-check-input:checked {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+}
 </style>
 @endpush
 
-
-@section('contenido')
-<main class="app-main">
-    <div class="container-fluid mt-4">
-
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="h3 mb-0">Listado de Usuarios</h2>
-            @can('user-create')
-                <a href="{{ route('usuarios.create') }}" class="btn btn-success shadow-sm">
-                    <i class="fa-solid fa-user-plus me-1"></i> Nuevo Usuario
-                </a>
-            @endcan
-        </div>
-
-        <!-- Mensaje de éxito -->
-        @if (session('mensaje'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fa-solid fa-circle-check me-2"></i>
-            {{ session('mensaje') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        @endif
-        
-        <!-- Tarjeta de Contenido: Búsqueda y Tabla -->
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white">
-                <form action="{{ route('usuarios.index') }}" method="GET">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="texto" placeholder="Buscar por nombre o email..."
-                            value="{{ request('texto') }}">
-                        <button type="submit" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
-                        </button>
-                    </div>
-                </form>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center" style="width: 60px;">ID</th>
-                                <th>Nombre</th>
-                                <th>Email</th>
-                                @if(auth()->user()->hasRole('super_admin'))
-                                    <th>Empresa</th>
-                                @endif
-                                <th>Rol</th>
-                                <th class="text-center">Estado</th>
-                                <th class="text-center" style="width: 180px;">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($registros as $reg)
-                            <tr class="align-middle">
-                                <td class="text-center">{{ $reg->id }}</td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($reg->name) }}&background=random&color=fff" alt="" class="rounded-circle me-2" width="32" height="32">
-                                        <span>{{ $reg->name }}</span>
-                                    </div>
-                                </td>
-                                <td>{{ $reg->email }}</td>
-                                @if(auth()->user()->hasRole('super_admin'))
-                                    <td>
-                                        <span class="badge bg-info-subtle text-info-emphasis fw-normal">{{ $reg->empresa->nombre ?? 'Sin empresa' }}</span>
-                                    </td>
-                                @endif
-                                <td>
-                                    @forelse ($reg->roles as $role)
-                                        <span class="badge rounded-pill bg-primary fw-normal">{{ $role->name }}</span>
-                                    @empty
-                                        <span class="badge rounded-pill bg-secondary fw-normal">Sin rol</span>
-                                    @endforelse
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge rounded-pill {{ $reg->activo ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger' }}">
-                                        {{ $reg->activo ? 'Activo' : 'Inactivo' }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group" role="group">
-                                        @can('user-edit')
-                                            <a href="{{ route('usuarios.edit', $reg->id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
-                                                <i class="fa-solid fa-pencil"></i>
-                                            </a>
-                                        @endcan
-                                        
-                                        @can('user-activate')
-                                            <span data-bs-toggle="tooltip" title="{{ $reg->activo ? 'Desactivar' : 'Activar' }}">
-                                                <button type="button" class="btn btn-sm {{ $reg->activo ? 'btn-outline-warning' : 'btn-outline-success' }}" data-bs-toggle="modal" data-bs-target="#modal-toggle-{{$reg->id}}">
-                                                    <i class="fa-solid {{ $reg->activo ? 'fa-ban' : 'fa-circle-check' }}"></i>
-                                                </button>
-                                            </span>
-                                        @endcan
-
-                                        @can('user-delete')
-                                            <span data-bs-toggle="tooltip" title="Eliminar">
-                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modal-eliminar-{{$reg->id}}">
-                                                    <i class="fa-solid fa-trash-can"></i>
-                                                </button>
-                                            </span>
-                                        @endcan
-                                    </div>
-                                </td>
-                            </tr>
-                            {{-- Los @include para los modales han sido removidos de aquí --}}
-                            @empty
-                            <tr>
-                                <td colspan="{{ auth()->user()->hasRole('super_admin') ? '7' : '6' }}">
-                                    <div class="text-center p-5">
-                                        <i class="fa-solid fa-users-slash fa-3x text-muted mb-3"></i>
-                                        <p class="mb-0 text-muted">No se encontraron usuarios que coincidan con la búsqueda.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            @if ($registros->hasPages())
-            <div class="card-footer bg-white border-0">
-                {{ $registros->appends(['texto' => request('texto')])->links() }}
-            </div>
-            @endif
-        </div>
-    </div>
-</main>
-
-@foreach ($registros as $reg)
-    @can('user-delete')
-        @include('usuario.delete', ['reg' => $reg])
-    @endcan
-    @can('user-activate')
-        @include('usuario.activate', ['reg' => $reg])
-    @endcan
-@endforeach
-
-@endsection
-
 @push('scripts')
 <script>
+    // Tu código para activar el menú lateral sigue siendo útil
     document.getElementById('mnuSeguridad').classList.add('menu-open');
     document.getElementById('itemUsuario').classList.add('active');
 
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
+    // Livewire manejará los tooltips, pero podemos reiniciarlos si es necesario
+    // después de cada renderizado de Livewire.
+    document.addEventListener('livewire:navigated', () => {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
 </script>
 @endpush

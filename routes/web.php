@@ -38,13 +38,6 @@ Route::middleware([RedirectAdminsFromWelcome::class])->group(function () {
     Route::get('/categorias/lista', [CategoriaController::class, 'listar'])->name('categorias.list');
 });
 
-// --- TIENDA PÚBLICA ---
-Route::middleware([RememberStoreUrl::class])->group(function () {
-    Route::get('/tienda/{empresa:slug}', [ProductoController::class, 'mostrarTienda'])->name('tienda.public.index');
-    Route::get('/tienda/{empresa:slug}/categoria/{categoria}', [ProductoController::class, 'filtrarPorCategoria'])->name('tienda.public.categoria');
-    Route::get('/tienda/{empresa:slug}/buscar-categorias', [CategoriaController::class, 'buscarPublico'])->name('tienda.categorias.buscar');
-    Route::get('/tienda/{empresa:slug}/buscar-productos', [ProductoController::class, 'buscarPublicoAjax'])->name('tienda.productos.buscar_ajax');
-});
 
 
 // 2. RUTAS PARA INVITADOS (Usuarios no autenticados)
@@ -143,8 +136,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/pedidos/{pedido}', [PedidoController::class, 'destroy'])->name('pedidos.destroy');
 
     // Gestión de Usuarios y Permisos (Admins)
-    Route::resource('usuarios', UserController::class)->except(['show']);
-    Route::patch('usuarios/{usuario}/toggle', [UserController::class, 'toggleStatus'])->name('usuarios.toggle');
+    // Route::resource('usuarios', UserController::class)->except(['show']);
+    // Route::patch('usuarios/{usuario}/toggle', [UserController::class, 'toggleStatus'])->name('usuarios.toggle');
+    Route::get('usuarios', [App\Http\Controllers\UserController::class, 'index'])->name('usuarios.index');
     Route::resource('roles', RoleController::class);
     Route::resource('permisos', PermissionController::class)->except(['show']);
     
@@ -153,4 +147,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/mis-clientes', [ClienteController::class, 'misClientes'])->name('clientes.mitienda');
     // Gestión de Empresas (SOLO Super Admin)
     Route::resource('empresas', EmpresaController::class);
+});
+
+// --- TIENDA PÚBLICA ---
+Route::middleware([RememberStoreUrl::class])
+->prefix('{empresa:slug}')
+->group(function () {
+    Route::get('/', [ProductoController::class, 'mostrarTienda'])->name('tienda.public.index');
+    Route::get('/categoria/{categoria}', [ProductoController::class, 'filtrarPorCategoria'])->name('tienda.public.categoria');
+    Route::get('/buscar-categorias', [CategoriaController::class, 'buscarPublico'])->name('tienda.categorias.buscar');
+    Route::get('/buscar-productos', [ProductoController::class, 'buscarPublicoAjax'])->name('tienda.productos.buscar_ajax');
 });

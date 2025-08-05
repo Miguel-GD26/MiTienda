@@ -59,7 +59,7 @@
                                         <span>{{ $empresa->nombre }}</span>
                                     </div>
                                 </td>
-                                <td>/tienda/{{ $empresa->slug }}</td>
+                                <td>{{ $empresa->slug }}</td>
                                 <td>{{ $empresa->created_at->format('d/m/Y') }}</td>
                             </tr>
                             @empty

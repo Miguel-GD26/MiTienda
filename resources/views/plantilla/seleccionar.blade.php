@@ -46,7 +46,7 @@
 
 
 <script>
-    const tiendaUrlBase = "{{ url('/tienda') }}";
+    const tiendaUrlBase = "{{ url('') }}";
 
     function generarUrl(slug) {
         return `${tiendaUrlBase}/${slug}`;
