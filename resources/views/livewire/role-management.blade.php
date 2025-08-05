@@ -16,7 +16,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body p-3">
                 <div class="input-group">
-                    <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Buscar por nombre del rol...">
+                    <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Buscar por nombre del rol (mín. 3 caracteres)...">
                     <button class="btn btn-primary" type="button">
                         <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
                     </button>
@@ -32,7 +32,6 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h5 class="card-title text-primary">{{ $reg->name }} </h5>
-                                    <br>
                                     <small class="text-muted">ID: {{ $reg->id }} | {{ $reg->permissions->count() }} permisos</small>
                                 </div>
                                 <div class="btn-group">
@@ -97,18 +96,41 @@
         @endif
     </div>
 
-    {{-- MODAL DE CREACIÓN / EDICIÓN --}}
     @if($showModal)
     <div class="modal fade show" style="display: block;" tabindex="-1" x-data @keydown.escape.window="$wire.closeModal()">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 {{-- 
-                    LA CLAVE ESTÁ AQUÍ: x-on:submit le dice a Alpine que, ANTES de que Livewire procese el submit, 
-                    sincronice la variable `selectedPermissions` de Alpine con la del backend.
+                    CORRECCIÓN 1: El x-data se mueve aquí, al <form>, para que todo su contenido,
+                    incluido el footer con el botón, esté dentro de su alcance.
                 --}}
-                <form wire:submit.prevent="saveRole" 
-                      x-on:submit="$wire.set('selectedPermissions', selectedPermissions)"
-                      wire:loading.class.delay="pe-none opacity-50">
+                <form wire:key="modal-role-{{ $roleId ?? 'new' }}"
+                      x-data="{
+                        allPermissions: {{ json_encode($allPermissions->pluck('name')) }},
+                        selectedPermissions: {{ json_encode($selectedPermissions) }},
+
+                        get allSelected() {
+                            return this.allPermissions.length > 0 && this.selectedPermissions.length === this.allPermissions.length;
+                        },
+                        toggleAll() {
+                            if (this.allSelected) {
+                                this.selectedPermissions = [];
+                            } else {
+                                this.selectedPermissions = [...this.allPermissions];
+                            }
+                        },
+                        get groupedPermissions() {
+                            return this.allPermissions.reduce((groups, permission) => {
+                                const groupName = permission.split('-')[0];
+                                if (!groups[groupName]) {
+                                    groups[groupName] = [];
+                                }
+                                groups[groupName].push(permission);
+                                return groups;
+                            }, {});
+                        }
+                     }"
+                     wire:loading.class.delay="pe-none opacity-50">
                       
                     <div class="modal-header">
                         <h5 class="modal-title">
@@ -118,33 +140,8 @@
                         <button type="button" class="btn-close" wire:click="closeModal"></button>
                     </div>
                     
-                    <div class="modal-body" style="max-height: 75vh; overflow-y: auto;"
-                         wire:key="modal-role-{{ $roleId ?? 'new' }}"
-                         x-data="{
-                            allPermissions: {{ json_encode($allPermissions->pluck('name')) }},
-                            selectedPermissions: {{ json_encode($selectedPermissions) }},
-
-                            get allSelected() {
-                                return this.allPermissions.length > 0 && this.selectedPermissions.length === this.allPermissions.length;
-                            },
-                            toggleAll() {
-                                if (this.allSelected) {
-                                    this.selectedPermissions = [];
-                                } else {
-                                    this.selectedPermissions = [...this.allPermissions];
-                                }
-                            },
-                            get groupedPermissions() {
-                                return this.allPermissions.reduce((groups, permission) => {
-                                    const groupName = permission.split('-')[0];
-                                    if (!groups[groupName]) {
-                                        groups[groupName] = [];
-                                    }
-                                    groups[groupName].push(permission);
-                                    return groups;
-                                }, {});
-                            }
-                         }">
+                    {{-- CORRECCIÓN 2: El modal-body ya no necesita el x-data --}}
+                    <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
                         
                         <div class="mb-4">
                             <label for="name" class="form-label">Nombre del Rol <span class="text-danger">*</span></label>
@@ -192,7 +189,10 @@
                     
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" wire:click="closeModal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">
+                        
+                        {{-- CORRECCIÓN 3: El botón vuelve a ser `type="button"` con un `@click` que llama al método con los datos --}}
+                        <button type="button" class="btn btn-primary"
+                                @click="$wire.saveRole(selectedPermissions)">
                             <span wire:loading.remove wire:target="saveRole"><i class="fa-solid fa-floppy-disk me-1"></i> Guardar Rol</span>
                             <span wire:loading wire:target="saveRole" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         </button>

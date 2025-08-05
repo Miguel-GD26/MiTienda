@@ -13,7 +13,8 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    private $relevantStatuses = ['pendiente', 'atendido', 'enviado', 'entregado', 'cancelado'];
+    // Estatus relevantes para Admin y Super Admin
+    private $adminStatuses = ['pendiente', 'atendido', 'enviado', 'entregado', 'cancelado'];
 
     public function index()
     {
@@ -22,9 +23,14 @@ class DashboardController extends Controller
 
         if ($user->hasRole('super_admin')) {
             $data = $this->getSuperAdminData();
-        } elseif ($user->hasRole('admin')) {
+        } elseif ($user->hasRole('admin') || $user->hasRole('vendedor')) {
+            // Un vendedor ve los mismos datos que un admin
             $data = $this->getAdminData($user->empresa);
+        } elseif ($user->hasRole('repartidor')) {
+            // Un repartidor ve un conjunto de datos diferente
+            $data = $this->getRepartidorData($user);
         } else {
+            // Si no es ninguno de los roles de sistema, va a la bienvenida (ej: cliente)
             return view('welcome');
         }
         
@@ -33,9 +39,10 @@ class DashboardController extends Controller
     
     private function getSuperAdminData()
     {
-        $statusCounts = Pedido::whereIn('estado', $this->relevantStatuses)
+        $statusCounts = Pedido::whereIn('estado', $this->adminStatuses)
             ->select('estado', DB::raw('count(*) as total'))->groupBy('estado')->pluck('total', 'estado')->all();
-        foreach ($this->relevantStatuses as $status) { if (!isset($statusCounts[$status])) $statusCounts[$status] = 0; }
+        // Asegurarse de que todos los estatus tengan un valor
+        foreach ($this->adminStatuses as $status) { if (!isset($statusCounts[$status])) $statusCounts[$status] = 0; }
         
         $totalPedidos = Pedido::count();
         $totalRelevantPedidos = array_sum($statusCounts);
@@ -50,6 +57,7 @@ class DashboardController extends Controller
         $ultimosClientes = User::role('cliente')->latest()->take(5)->get();
 
         return [
+            'view_type' => 'super_admin', // Para usar en la vista Blade
             'kpi' => $statusCounts,
             'totalPedidos' => $totalPedidos,
             'ingresosTotales' => Pedido::where('estado', 'entregado')->sum('total'),
@@ -67,12 +75,14 @@ class DashboardController extends Controller
     private function getAdminData($empresa)
     {
         if (!$empresa) {
-            return [ ];
+            // Manejar caso de admin/vendedor sin empresa asignada
+            return ['view_type' => 'no_empresa']; 
         }
 
-        $statusCounts = $empresa->pedidos()->whereIn('estado', $this->relevantStatuses)
+        $statusCounts = $empresa->pedidos()->whereIn('estado', $this->adminStatuses)
             ->select('estado', DB::raw('count(*) as total'))->groupBy('estado')->pluck('total', 'estado')->all();
-        foreach ($this->relevantStatuses as $status) { if (!isset($statusCounts[$status])) $statusCounts[$status] = 0; }
+        // Asegurarse de que todos los estatus tengan un valor
+        foreach ($this->adminStatuses as $status) { if (!isset($statusCounts[$status])) $statusCounts[$status] = 0; }
         
         $totalPedidos = $empresa->pedidos()->count();
         $totalRelevantPedidos = array_sum($statusCounts);
@@ -100,6 +110,7 @@ class DashboardController extends Controller
         })->filter(); 
         
         return [
+            'view_type' => 'admin', // Para usar en la vista Blade
             'kpi' => $statusCounts,
             'totalPedidos' => $totalPedidos,
             'ingresosTotales' => $empresa->pedidos()->where('estado', 'entregado')->sum('total'),
@@ -113,16 +124,41 @@ class DashboardController extends Controller
         ];
     }
 
+    private function getRepartidorData($repartidor)
+    {
+        $empresa = $repartidor->empresa;
+        if (!$empresa) {
+            // Manejar caso de repartidor sin empresa asignada
+            return ['view_type' => 'no_empresa'];
+        }
+        
+        // Estatus relevantes solo para el repartidor
+        $repartidorStatuses = ['enviado', 'entregado'];
+
+        $statusCounts = $empresa->pedidos()->whereIn('estado', $repartidorStatuses)
+            ->select('estado', DB::raw('count(*) as total'))->groupBy('estado')->pluck('total', 'estado')->all();
+        // Asegurarse de que todos los estatus tengan un valor
+        foreach ($repartidorStatuses as $status) { if (!isset($statusCounts[$status])) $statusCounts[$status] = 0; }
+        
+        return [
+            'view_type' => 'repartidor', // Para usar en la vista Blade
+            'kpi' => $statusCounts,
+            'pedidosParaEntregar' => $empresa->pedidos()->with('cliente.user')->where('estado', 'enviado')->latest()->get(),
+            'pedidosEntregadosHoy' => $empresa->pedidos()->where('estado', 'entregado')->whereDate('updated_at', Carbon::today())->count(),
+        ];
+    }
+
     private function getSparklineData($empresaId = null)
     {
         $sparklineData = [];
+        // Inicializar los últimos 15 días con 0
         for ($i = 14; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i)->format('Y-m-d');
             $sparklineData[$date] = 0;
         }
         
         $query = Pedido::where('estado', 'entregado')
-            ->where('created_at', '>=', Carbon::now()->subDays(14));
+            ->where('created_at', '>=', Carbon::now()->subDays(15)); // Asegurarse de tomar 15 días completos
 
         if ($empresaId) {
             $query->where('empresa_id', $empresaId);
@@ -133,6 +169,7 @@ class DashboardController extends Controller
             ->get([DB::raw('DATE(created_at) as date'), DB::raw('SUM(total) as total')])
             ->pluck('total', 'date');
             
+        // Rellenar los datos con los ingresos reales
         foreach($ingresosDiarios as $date => $total) {
             if(isset($sparklineData[$date])) {
                 $sparklineData[$date] = $total;

@@ -26,7 +26,6 @@ class UserManagement extends Component
     
     public $name, $email, $password, $password_confirmation, $role, $empresa_id;
     
-    // La propiedad 'activo' ahora está pública para poder usar @entangle
     public $activo;
 
     public $empresaOption = '';
@@ -204,9 +203,7 @@ class UserManagement extends Component
         if ($this->userToDeleteOrToggle) {
             $user = $this->userToDeleteOrToggle;
 
-            // VERIFICACIÓN DE ADVERTENCIA
             if ($user->empresa && $user->hasRole('admin')) {
-                // Contar cuántos otros administradores quedan en la misma empresa.
                 $otherAdminsCount = User::where('empresa_id', $user->empresa_id)
                                         ->where('id', '!=', $user->id)
                                         ->whereHas('roles', function ($query) {
@@ -215,17 +212,15 @@ class UserManagement extends Component
                                         ->count();
 
                 if ($otherAdminsCount === 0) {
-                    // Si no quedan otros admins, no se puede borrar.
                     $this->dispatch('alert', [
                         'type' => 'warning',
                         'message' => 'No se puede eliminar al último administrador de la empresa.'
                     ]);
                     $this->closeConfirmModal();
-                    return; // Detenemos la ejecución
+                    return; 
                 }
             }
 
-            // Si pasa la verificación, se procede con el borrado normal.
             $user->delete();
             $this->dispatch('alert', ['type' => 'success', 'message' => 'Usuario eliminado correctamente.']);
             $this->closeConfirmModal();
@@ -237,32 +232,24 @@ class UserManagement extends Component
         if ($this->userToDeleteOrToggle) {
             $user = $this->userToDeleteOrToggle;
 
-            // --- INICIO DE LA NUEVA VALIDACIÓN ---
-            // Comprueba si el usuario que se va a modificar es el mismo que está logueado.
             if (auth()->id() === $user->id) {
-                // Si es el mismo, no se puede desactivar.
-                // Mostramos una alerta de error y detenemos la ejecución.
                 $this->dispatch('alert', [
                     'type' => 'error',
                     'message' => 'No puedes cambiar tu propio estado de actividad.'
                 ]);
                 $this->closeConfirmModal();
-                return; // Detiene el método aquí
+                return; 
             }
-            // --- FIN DE LA NUEVA VALIDACIÓN ---
-
-            // Si la validación pasa, se procede con la lógica original.
+            
             $user->activo = !$user->activo;
             $user->save();
 
-            // Si se acaba de desactivar
             if (!$user->activo) {
                 $this->dispatch('alert', [
                     'type' => 'warning',
                     'message' => "El usuario {$user->name} ha sido desactivado y no podrá iniciar sesión."
                 ]);
             } else {
-                // Si se acaba de activar
                 $this->dispatch('alert', [
                     'type' => 'success',
                     'message' => "El usuario {$user->name} ha sido activado."
@@ -273,6 +260,7 @@ class UserManagement extends Component
         }
     }
     
+
     public function render()
     {
         $query = User::with('roles', 'empresa');
@@ -280,14 +268,23 @@ class UserManagement extends Component
             $query->where('empresa_id', auth()->user()->empresa_id);
         }
 
-        if (!empty($this->search)) {
-            $query->where(function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('email', 'like', '%' . $this->search . '%');
+        $searchTerm = trim($this->search);
+
+        if (!empty($searchTerm)) {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                ->orWhere('email', 'like', '%' . $searchTerm . '%');
             });
         }
         
         $registros = $query->orderBy('id', 'asc')->paginate($this->perPage);
+        
+        if ($registros->isEmpty() && !empty($searchTerm)) {
+            $this->dispatch('alert', [
+                'type' => 'info',
+                'message' => "No se encontraron usuarios para '{$searchTerm}'."
+            ]);
+        }
         
         $roles = Role::query()->when(!auth()->user()->hasRole('super_admin'), function ($q) {
             $q->where('name', '!=', 'super_admin');

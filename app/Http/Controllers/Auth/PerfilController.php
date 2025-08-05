@@ -19,7 +19,7 @@ class PerfilController extends Controller
         $user = Auth::user()->load('empresa', 'cliente'); 
         $isSocialUser = !is_null($user->provider_name);
 
-        if ($user->hasRole(['super_admin', 'admin'])) {
+        if ($user->hasRole(['super_admin', 'admin','vendedor'])) {
             return view('autenticacion.perfil', ['registro' => $user, 'empresa' => $user->empresa, 'isSocialUser' => $isSocialUser]);
         }
         

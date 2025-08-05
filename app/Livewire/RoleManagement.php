@@ -15,23 +15,18 @@ class RoleManagement extends Component
 {
     use WithPagination;
 
-    // Propiedades para la vista principal
     public $search = '';
     protected $paginationTheme = 'bootstrap';
 
-    // Propiedades para el modal de creación/edición
     public $showModal = false;
     public $roleId;
     public $isEditMode = false;
     public $name;
-    // Esta propiedad será sincronizada con AlpineJS
     public $selectedPermissions = [];
 
-    // Propiedades para el modal de confirmación
     public $showConfirmModal = false;
     public $roleToDelete;
 
-    // Listener para actualizar
     protected $listeners = ['roleUpdated' => '$refresh'];
 
     protected function rules()
@@ -59,7 +54,6 @@ class RoleManagement extends Component
             }
             $this->roleId = $role->id;
             $this->name = $role->name;
-            // Pasamos los permisos iniciales a la propiedad pública
             $this->selectedPermissions = $role->permissions->pluck('name')->toArray();
             $this->isEditMode = true;
         } else {
@@ -86,10 +80,11 @@ class RoleManagement extends Component
         $this->selectedPermissions = [];
         $this->isEditMode = false;
     }
-// En app/Livewire/RoleManagement.php -> saveRole()
 
-    public function saveRole()
+    public function saveRole($permissionsFromAlpine) 
     {
+        $this->selectedPermissions = $permissionsFromAlpine;
+
         $validatedData = $this->validate();
         
         DB::beginTransaction();
@@ -99,7 +94,6 @@ class RoleManagement extends Component
 
             DB::commit();
 
-            // VERIFICACIÓN DE ADVERTENCIA
             if (empty($this->selectedPermissions)) {
                 $this->dispatch('alert', [
                     'type' => 'warning',
@@ -113,16 +107,17 @@ class RoleManagement extends Component
             }
 
             $this->closeModal();
-            // ... catch ...
+
         } catch (\Exception $e) {
-                DB::rollBack();
-                $this->dispatch('alert', [
-                    'type' => 'error',
-                    'message' => 'Ocurrió un error al guardar el rol.'
-                ]);
+            DB::rollBack();
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'Ocurrió un error al guardar el rol.'
+            ]);
         }
     }
    
+    
     
     public function openConfirmModal($roleId)
     {
@@ -140,28 +135,29 @@ class RoleManagement extends Component
         $this->roleToDelete = null;
     }
 
-    // En app/Livewire/RoleManagement.php -> deleteRole()
-
     public function deleteRole()
     {
         if ($this->roleToDelete) {
             $role = $this->roleToDelete;
 
-            // VERIFICACIÓN DE ADVERTENCIA
             if ($role->users()->count() > 0) {
                 $this->dispatch('alert', [
                     'type' => 'warning',
                     'message' => "No se puede eliminar el rol '{$role->name}' porque está asignado a {$role->users()->count()} usuario(s)."
                 ]);
                 $this->closeConfirmModal();
-                return; // Detenemos la ejecución
+                return;
             }
 
-            // Si pasa la verificación, se procede con el borrado.
             $role->delete();
             $this->dispatch('alert', ['type' => 'success', 'message' => 'Rol eliminado correctamente.']);
             $this->closeConfirmModal();
         }
+    }
+
+    public function updatedSearch($value)
+    {
+        $this->resetPage();        
     }
 
     public function render()
@@ -173,13 +169,19 @@ class RoleManagement extends Component
             $query->where('name', '!=', 'super_admin');
         }
 
-        if (!empty($this->search)) {
-            $query->where('name', 'like', '%' . $this->search . '%');
+        $searchTerm = trim($this->search);
+        if (!empty($searchTerm)) {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
         }
 
-        
-
         $registros = $query->orderBy('id', 'asc')->paginate(9);
+        
+        if ($registros->isEmpty() && !empty($searchTerm)) {
+            $this->dispatch('alert', [
+                'type' => 'info',
+                'message' => "No se encontraron resultados para '{$searchTerm}'."
+            ]);
+        }
         
         $allPermissions = Permission::all()->sortBy('name');
 

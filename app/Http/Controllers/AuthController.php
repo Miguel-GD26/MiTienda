@@ -25,9 +25,12 @@ class AuthController extends Controller
 
             $request->session()->regenerate();
 
-        if ($user->hasRole(['super_admin', 'admin'])) {
+            // --- INICIO DE LA MODIFICACIÓN ---
+            // Hemos agrupado todos los roles "internos" que deben ir al dashboard.
+            if ($user->hasRole(['super_admin', 'admin', 'vendedor', 'repartidor'])) {
                 return redirect()->intended('dashboard');
             }
+            // --- FIN DE LA MODIFICACIÓN ---
 
             if ($user->hasRole('cliente')) {
                 if (session()->has('url.store_before_login')) {
@@ -38,6 +41,7 @@ class AuthController extends Controller
                 return redirect()->route('welcome');
             }
             
+            // Si el usuario tiene un rol no definido aquí (muy raro), lo enviamos a la bienvenida.
             return redirect()->route('welcome');
         }
         
