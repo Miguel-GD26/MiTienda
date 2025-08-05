@@ -14,34 +14,30 @@ use Illuminate\Support\Str;
 
 class UserManagement extends Component
 {
-    use WithPagination; // Importante para la paginación
+    use WithPagination;
 
-    // Propiedades para la búsqueda y paginación
     public $search = '';
     public $perPage = 10;
     protected $paginationTheme = 'bootstrap';
 
-    // Propiedades para el modal y el formulario
     public $showModal = false;
     public $userId = null;
     public $isEditMode = false;
     
-    // Propiedades del modelo User
-    public $name, $email, $password, $password_confirmation, $role, $empresa_id, $activo;
+    public $name, $email, $password, $password_confirmation, $role, $empresa_id;
+    
+    // La propiedad 'activo' ahora está pública para poder usar @entangle
+    public $activo;
 
-    // Propiedades para la creación de empresa
     public $empresaOption = '';
     public $empresa_nombre, $empresa_rubro, $empresa_telefono_whatsapp;
 
-    // Propiedades para los modales de confirmación
     public $showConfirmModal = false;
-    public $confirmModalType = 'delete'; // 'delete' o 'toggle'
+    public $confirmModalType = 'delete';
     public $userToDeleteOrToggle;
 
-    // Listener para actualizar la tabla desde otros componentes si fuera necesario
     protected $listeners = ['userUpdated' => '$refresh'];
 
-    // Reglas de validación
     protected function rules()
     {
         $rules = [
@@ -52,20 +48,17 @@ class UserManagement extends Component
             'activo' => 'boolean'
         ];
 
-        // Reglas para la contraseña
         if (!$this->isEditMode || !empty($this->password)) {
             $rules['password'] = 'required|string|min:8|confirmed';
             $rules['password_confirmation'] = 'required';
         }
 
-        // Reglas para la empresa
         if (auth()->user()->hasRole('super_admin') && in_array($this->role, ['admin', 'vendedor', 'repartidor'])) {
             if ($this->empresaOption === 'crear_nueva') {
                 $rules['empresa_nombre'] = 'required|string|max:255|unique:empresas,nombre';
                 $rules['empresa_rubro'] = 'nullable|string|max:255';
                 $rules['empresa_telefono_whatsapp'] = 'nullable|string|max:20';
             } else {
-                // En modo creación, si no es crear_nueva, se requiere una empresa existente
                 if (!$this->isEditMode) {
                     $rules['empresa_id'] = 'required|exists:empresas,id';
                 }
@@ -75,7 +68,6 @@ class UserManagement extends Component
         return $rules;
     }
     
-    // Mensajes de validación personalizados
     public function updated($propertyName)
     {
         $this->validateOnly($propertyName);
@@ -97,7 +89,7 @@ class UserManagement extends Component
             $this->isEditMode = true;
         } else {
             $this->isEditMode = false;
-            $this->activo = true; // Valor por defecto
+            $this->activo = true;
         }
         $this->showModal = true;
     }
@@ -128,7 +120,6 @@ class UserManagement extends Component
 
     public function saveUser()
     {
-        // Asignar empresa_id desde empresaOption si es un número
         if(is_numeric($this->empresaOption)){
             $this->empresa_id = $this->empresaOption;
         }
@@ -139,8 +130,7 @@ class UserManagement extends Component
         try {
             $empresaId = $this->empresa_id;
 
-            // Lógica para Super Admin creando/asignando empresa
-            if (auth()->user()->hasRole('super_admin')) {
+            if (auth()->user()->hasRole('super_admin') && in_array($this->role, ['admin', 'vendedor', 'repartidor'])) {
                 if ($this->empresaOption === 'crear_nueva') {
                     $empresa = Empresa::create([
                         'nombre' => $validatedData['empresa_nombre'],
@@ -151,7 +141,6 @@ class UserManagement extends Component
                     $empresaId = $empresa->id;
                 }
             } elseif(!auth()->user()->hasRole('super_admin')) {
-                // Para otros roles, asignar la empresa del usuario logueado
                 $empresaId = auth()->user()->empresa_id;
             }
 
@@ -170,12 +159,20 @@ class UserManagement extends Component
             $user->syncRoles($this->role);
 
             DB::commit();
-            session()->flash('mensaje', 'Usuario ' . ($this->isEditMode ? 'actualizado' : 'creado') . ' correctamente.');
+            
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'message' => 'Usuario ' . ($this->isEditMode ? 'actualizado' : 'creado') . ' correctamente.'
+            ]);
+
             $this->closeModal();
             
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Ocurrió un error: ' . $e->getMessage());
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'Ocurrió un error al guardar: ' . $e->getMessage()
+            ]);
         }
     }
     
@@ -204,9 +201,8 @@ class UserManagement extends Component
     private function deleteUser()
     {
         if ($this->userToDeleteOrToggle) {
-            // Aquí puedes añadir la lógica compleja de borrado que tenías en el controlador
             $this->userToDeleteOrToggle->delete();
-            session()->flash('mensaje', 'Usuario eliminado correctamente.');
+            $this->dispatch('alert', ['type' => 'success', 'message' => 'Usuario eliminado correctamente.']);
             $this->closeConfirmModal();
         }
     }
@@ -216,14 +212,13 @@ class UserManagement extends Component
         if ($this->userToDeleteOrToggle) {
             $this->userToDeleteOrToggle->activo = !$this->userToDeleteOrToggle->activo;
             $this->userToDeleteOrToggle->save();
-            session()->flash('mensaje', 'Estado del usuario actualizado correctamente.');
+            $this->dispatch('alert', ['type' => 'success', 'message' => 'Estado del usuario actualizado.']);
             $this->closeConfirmModal();
         }
     }
 
     public function render()
     {
-        // Replicamos la lógica de búsqueda y paginación
         $query = User::with('roles', 'empresa');
         if (!auth()->user()->hasRole('super_admin')) {
             $query->where('empresa_id', auth()->user()->empresa_id);
@@ -238,7 +233,6 @@ class UserManagement extends Component
         
         $registros = $query->orderBy('id', 'asc')->paginate($this->perPage);
         
-        // Datos para los selects del formulario
         $roles = Role::query()->when(!auth()->user()->hasRole('super_admin'), function ($q) {
             $q->where('name', '!=', 'super_admin');
         })->get();

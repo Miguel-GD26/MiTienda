@@ -1,38 +1,19 @@
-{{-- resources/views/livewire/user-management.blade.php --}}
 <div>
     <div class="container-fluid mt-4">
         {{-- SECCIÓN 1: CABECERA Y BÚSQUEDA --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="h3 mb-0">Listado de Usuarios</h2>
             @can('user-create')
-                {{-- Botón para abrir el modal de creación --}}
                 <button wire:click="openModal()" class="btn btn-success shadow-sm">
                     <i class="fa-solid fa-user-plus me-1"></i> Nuevo Usuario
                 </button>
             @endcan
         </div>
 
-        {{-- Alertas de Livewire --}}
-        @if (session()->has('mensaje'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fa-solid fa-circle-check me-2"></i>
-                {{ session('mensaje') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-        @if (session()->has('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fa-solid fa-circle-xmark me-2"></i>
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
         {{-- Tarjeta de Contenido: Búsqueda y Tabla --}}
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white">
                 <div class="input-group">
-                    {{-- Input de búsqueda bindeado a la propiedad $search --}}
                     <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Buscar por nombre o email...">
                     <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
                 </div>
@@ -40,7 +21,6 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover table-striped mb-0">
-                        {{-- ... Tu thead es idéntico ... --}}
                         <thead class="table-light">
                             <tr>
                                 <th class="text-center" style="width: 60px;">ID</th>
@@ -85,21 +65,18 @@
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         @can('user-edit', $reg)
-                                            {{-- Botón para abrir el modal de edición --}}
                                             <button wire:click="openModal({{ $reg->id }})" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
                                                 <i class="fa-solid fa-pencil"></i>
                                             </button>
                                         @endcan
                                         
                                         @can('user-activate', $reg)
-                                            {{-- Botón para abrir el modal de confirmación de activar/desactivar --}}
                                             <button wire:click="openConfirmModal('toggle', {{ $reg->id }})" class="btn btn-sm {{ $reg->activo ? 'btn-outline-warning' : 'btn-outline-success' }}" data-bs-toggle="tooltip" title="{{ $reg->activo ? 'Desactivar' : 'Activar' }}">
                                                 <i class="fa-solid {{ $reg->activo ? 'fa-ban' : 'fa-circle-check' }}"></i>
                                             </button>
                                         @endcan
 
                                         @can('user-delete', $reg)
-                                            {{-- Botón para abrir el modal de confirmación de eliminar --}}
                                             <button wire:click="openConfirmModal('delete', {{ $reg->id }})" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Eliminar">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
@@ -112,7 +89,7 @@
                                 <td colspan="{{ auth()->user()->hasRole('super_admin') ? '7' : '6' }}">
                                     <div class="text-center p-5">
                                         <i class="fa-solid fa-users-slash fa-3x text-muted mb-3"></i>
-                                        <p class="mb-0 text-muted">No se encontraron usuarios.</p>
+                                        <p class="mb-0 text-muted">No se encontraron usuarios que coincidan con la búsqueda.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -129,65 +106,81 @@
         </div>
     </div>
 
-    {{-- MODAL DE CREACIÓN / EDICIÓN --}}
+    {{-- MODAL DE CREACIÓN / EDICIÓN (VERSIÓN PROFESIONAL) --}}
     @if($showModal)
-    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" x-data @keydown.escape.window="$wire.closeModal()">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">{{ $isEditMode ? 'Editar Usuario' : 'Crear Usuario' }}</h5>
+                    <h5 class="modal-title">
+                        <i class="fa-solid {{ $isEditMode ? 'fa-user-pen' : 'fa-user-plus' }} me-2"></i>
+                        {{ $isEditMode ? 'Editar Usuario' : 'Crear Usuario' }}
+                    </h5>
                     <button type="button" class="btn-close" wire:click="closeModal"></button>
                 </div>
                 <div class="modal-body">
-                    {{-- Formulario bindeado con wire:submit.prevent --}}
-                    <form wire:submit.prevent="saveUser">
+                    <form wire:submit.prevent="saveUser" wire:loading.class="pe-none opacity-50" novalidate>
                         
-                        {{-- SECCIÓN 1: INFORMACIÓN PERSONAL --}}
+                        <h6 class="mb-3 text-primary border-bottom pb-2"><i class="fa-solid fa-id-card me-2"></i>Información Personal</h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="name" class="form-label">Nombre completo <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model.defer="name" id="name">
-                                @error('name') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model.defer="name" id="name" placeholder="Ej: Juan Pérez">
+                                </div>
+                                @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="email" class="form-label">Correo Electrónico <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control @error('email') is-invalid @enderror" wire:model.defer="email" id="email">
-                                @error('email') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror" wire:model.defer="email" id="email" placeholder="ejemplo@correo.com">
+                                </div>
+                                @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="password" class="form-label">Contraseña @if(!$isEditMode)<span class="text-danger">*</span>@endif</label>
-                                <input type="password" class="form-control @error('password') is-invalid @enderror" wire:model.defer="password" id="password" autocomplete="new-password">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                    <input type="password" class="form-control @error('password') is-invalid @enderror" wire:model.defer="password" id="password" autocomplete="new-password">
+                                </div>
                                 @if($isEditMode)<small class="form-text text-muted">Dejar en blanco para no cambiar.</small>@endif
-                                @error('password') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                @error('password') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="password_confirmation" class="form-label">Confirmar Contraseña @if(!$isEditMode)<span class="text-danger">*</span>@endif</label>
-                                <input type="password" class="form-control" wire:model.defer="password_confirmation" id="password_confirmation">
+                                 <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                    <input type="password" class="form-control" wire:model.defer="password_confirmation" id="password_confirmation">
+                                </div>
                             </div>
                         </div>
 
-                        {{-- SECCIÓN 2: GESTIÓN DE CUENTA --}}
                         @can('user-edit')
-                        <hr>
-                        <h5>Gestión de Cuenta</h5>
+                        <h6 class="mt-3 mb-3 text-primary border-bottom pb-2"><i class="fa-solid fa-user-gear me-2"></i>Gestión de Cuenta</h6>
                         <div class="row align-items-center">
                             <div class="col-md-6 mb-3">
                                 <label for="role" class="form-label">Rol del Usuario <span class="text-danger">*</span></label>
-                                <select class="form-select @error('role') is-invalid @enderror" wire:model.live="role" id="role">
-                                    <option value="">Seleccione un rol</option>
-                                    @foreach($roles as $r)
-                                        <option value="{{ $r->name }}">{{ $r->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('role') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-user-tag"></i></span>
+                                    <select class="form-select @error('role') is-invalid @enderror" wire:model.live="role" id="role">
+                                        <option value="" disabled>Seleccione un rol</option>
+                                        @foreach($roles as $r)
+                                            <option value="{{ $r->name }}">{{ $r->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @error('role') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             
-                            @if(auth()->user()->hasRole('super_admin'))
-                                @if(in_array($role, ['admin', 'vendedor', 'repartidor']))
-                                    <div class="col-md-6 mb-3">
-                                        <label for="empresaOption" class="form-label">Empresa <span class="text-danger">*</span></label>
+                            @if(auth()->user()->hasRole('super_admin') && in_array($role, ['admin', 'vendedor', 'repartidor']))
+                                <div class="col-md-6 mb-3">
+                                    <label for="empresaOption" class="form-label">Empresa <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
                                         <select class="form-select @error('empresaOption') is-invalid @enderror @error('empresa_id') is-invalid @enderror" wire:model.live="empresaOption" id="empresaOption" @if($isEditMode) disabled @endif>
                                             @if(!$isEditMode)
                                                 <option value="">Asignar o crear empresa</option>
@@ -199,64 +192,63 @@
                                                 <option value="{{ $empresa_id }}" selected>{{ \App\Models\Empresa::find($empresa_id)->nombre ?? 'Sin empresa' }}</option>
                                             @endif
                                         </select>
-                                        @error('empresaOption') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                                        @error('empresa_id') <span class="invalid-feedback">{{ $message }}</span> @enderror
                                     </div>
-                                @endif
+                                    @error('empresaOption') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    @error('empresa_id') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
                             @endif
                         </div>
-
+                        
                         @if($isEditMode)
-                        <div class="row"
-                            x-data="{ activo: @entangle('activo') }"> 
-                            
+                        <div class="row" x-data="{ activo: @entangle('activo') }"> 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label d-block">Estado <span class="text-danger">*</span></label>
-                                <div class="form-check form-switch fs-5">
-                                    <input class="form-check-input" type="checkbox" role="switch" id="activoSwitch" 
-                                        x-model="activo"
-                                        wire:model.live="activo">
-
-                                    <label class="form-check-label" 
-                                        :class="activo ? 'text-success' : 'text-danger'" 
-                                        for="activoSwitch"
-                                        x-text="activo ? 'Activo' : 'Inactivo'">
-                                    </label>
+                                <label class="form-label d-block">Estado</label>
+                                 <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="activoSwitch" x-model="activo" wire:model.live="activo">
+                                    <label class="form-check-label" :class="activo ? 'text-success' : 'text-danger'" for="activoSwitch" x-text="activo ? 'Activo' : 'Inactivo'"></label>
                                 </div>
                             </div>
                         </div>
                         @endif
                         @endcan
-
-                        {{-- SECCIÓN 3: CREAR NUEVA EMPRESA (CONDICIONAL) --}}
+                        
                         @if(!$isEditMode && auth()->user()->hasRole('super_admin') && $empresaOption === 'crear_nueva')
-                        <div class="p-3 mb-3 bg-light rounded border">
-                             <h5>Datos de la Nueva Empresa</h5>
-                             <div class="row">
+                        <div x-data="{ show: false }" x-init="() => { setTimeout(() => show = true, 50) }" x-show="show" 
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0 transform -translate-y-4"
+                             x-transition:enter-end="opacity-100 transform translate-y-0"
+                             class="p-3 my-3 bg-light rounded border">
+                            <h6 class="text-info"><i class="fa-solid fa-plus-circle me-2"></i>Datos de la Nueva Empresa</h6>
+                            <div class="row">
                                  <div class="col-md-6 mb-3">
                                      <label for="empresa_nombre" class="form-label">Nombre Empresa <span class="text-danger">*</span></label>
                                      <input type="text" class="form-control @error('empresa_nombre') is-invalid @enderror" wire:model.defer="empresa_nombre" id="empresa_nombre">
-                                     @error('empresa_nombre')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                                     @error('empresa_nombre')<span class="text-danger small">{{ $message }}</span>@enderror
                                  </div>
                                  <div class="col-md-6 mb-3">
                                      <label for="empresa_rubro" class="form-label">Rubro</label>
                                      <input type="text" class="form-control @error('empresa_rubro') is-invalid @enderror" wire:model.defer="empresa_rubro" id="empresa_rubro">
-                                     @error('empresa_rubro')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                                     @error('empresa_rubro')<span class="text-danger small">{{ $message }}</span>@enderror
                                  </div>
                                  <div class="col-md-6 mb-3">
                                      <label for="empresa_telefono_whatsapp" class="form-label">Teléfono / WhatsApp</label>
                                      <input type="text" class="form-control @error('empresa_telefono_whatsapp') is-invalid @enderror" wire:model.defer="empresa_telefono_whatsapp" id="empresa_telefono_whatsapp">
-                                     @error('empresa_telefono_whatsapp')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                                     @error('empresa_telefono_whatsapp')<span class="text-danger small">{{ $message }}</span>@enderror
                                  </div>
                              </div>
                          </div>
                         @endif
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" wire:click="closeModal">Cancelar</button>
+                        <div class="modal-footer mt-4">
+                            <button type="button" class="btn btn-secondary" wire:click="closeModal"><i class="fa-solid fa-xmark me-1"></i> Cancelar</button>
                             <button type="submit" class="btn btn-primary">
-                                <span wire:loading.remove wire:target="saveUser">Guardar</span>
-                                <span wire:loading wire:target="saveUser">Guardando...</span>
+                                <span wire:loading.remove wire:target="saveUser">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i> Guardar
+                                </span>
+                                <span wire:loading wire:target="saveUser">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    Guardando...
+                                </span>
                             </button>
                         </div>
                     </form>
