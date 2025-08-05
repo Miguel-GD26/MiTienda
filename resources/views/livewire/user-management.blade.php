@@ -207,16 +207,20 @@
                         </div>
 
                         @if($isEditMode)
-                        <div class="row">
+                        <div class="row"
+                            x-data="{ activo: @entangle('activo') }"> 
+                            
                             <div class="col-md-6 mb-3">
                                 <label class="form-label d-block">Estado <span class="text-danger">*</span></label>
                                 <div class="form-check form-switch fs-5">
-                                    {{-- El input se bindea a la propiedad 'activo' de Livewire --}}
-                                    <input class="form-check-input" type="checkbox" role="switch" id="activoSwitch" wire:model.live="activo">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="activoSwitch" 
+                                        x-model="activo"
+                                        wire:model.live="activo">
 
-                                    {{-- El label reacciona al estado de la propiedad 'activo' --}}
-                                    <label class="form-check-label {{ $activo ? 'text-success' : 'text-danger' }}" for="activoSwitch">
-                                        {{ $activo ? 'Activo' : 'Inactivo' }}
+                                    <label class="form-check-label" 
+                                        :class="activo ? 'text-success' : 'text-danger'" 
+                                        for="activoSwitch"
+                                        x-text="activo ? 'Activo' : 'Inactivo'">
                                     </label>
                                 </div>
                             </div>
