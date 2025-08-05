@@ -26,7 +26,6 @@ class UserManagement extends Component
     
     public $name, $email, $password, $password_confirmation, $role, $empresa_id;
     
-    // La propiedad 'activo' ahora está pública para poder usar @entangle
     public $activo;
 
     public $empresaOption = '';

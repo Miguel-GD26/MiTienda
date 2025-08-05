@@ -12,7 +12,7 @@
 
         {{-- Tarjeta de Contenido: Búsqueda y Tabla --}}
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-white">
+            <div class="card-header">
                 <div class="input-group">
                     <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Buscar por nombre o email...">
                     <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
@@ -47,18 +47,18 @@
                                 <td>{{ $reg->email }}</td>
                                 @if(auth()->user()->hasRole('super_admin'))
                                     <td>
-                                        <span class="badge bg-info-subtle text-info-emphasis fw-normal">{{ $reg->empresa->nombre ?? 'Sin empresa' }}</span>
+                                        <span class="badge text-bg-info fw-normal">{{ $reg->empresa->nombre ?? 'Sin empresa' }}</span>
                                     </td>
                                 @endif
                                 <td>
                                     @forelse ($reg->roles as $role)
-                                        <span class="badge rounded-pill bg-primary fw-normal">{{ $role->name }}</span>
+                                        <span class="badge rounded-pill text-bg-primary fw-normal">{{ $role->name }}</span>
                                     @empty
-                                        <span class="badge rounded-pill bg-secondary fw-normal">Sin rol</span>
+                                        <span class="badge rounded-pill text-bg-secondary fw-normal">Sin rol</span>
                                     @endforelse
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge rounded-pill {{ $reg->activo ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger' }}">
+                                    <span class="badge {{ $reg->activo ? 'text-bg-success' : 'text-bg-danger' }}">
                                         {{ $reg->activo ? 'Activo' : 'Inactivo' }}
                                     </span>
                                 </td>
@@ -88,8 +88,8 @@
                             <tr>
                                 <td colspan="{{ auth()->user()->hasRole('super_admin') ? '7' : '6' }}">
                                     <div class="text-center p-5">
-                                        <i class="fa-solid fa-users-slash fa-3x text-muted mb-3"></i>
-                                        <p class="mb-0 text-muted">No se encontraron usuarios que coincidan con la búsqueda.</p>
+                                        <i class="fa-solid fa-users-slash fa-3x text-secondary mb-3"></i>
+                                        <p class="mb-0 text-muted">No se encontraron usuarios.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -99,14 +99,14 @@
                 </div>
             </div>
             @if ($registros->hasPages())
-            <div class="card-footer bg-white border-0">
+            <div class="card-footer">
                 {{ $registros->links() }}
             </div>
             @endif
         </div>
     </div>
 
-    {{-- MODAL DE CREACIÓN / EDICIÓN (VERSIÓN PROFESIONAL) --}}
+    {{-- MODAL DE CREACIÓN / EDICIÓN --}}
     @if($showModal)
     <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" x-data @keydown.escape.window="$wire.closeModal()">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -140,21 +140,50 @@
                                 @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row" 
+                            x-data="{ 
+                                showPassword: false, 
+                                showConfirmPassword: false 
+                            }">
                             <div class="col-md-6 mb-3">
                                 <label for="password" class="form-label">Contraseña @if(!$isEditMode)<span class="text-danger">*</span>@endif</label>
+                                {{-- Grupo de input para la contraseña --}}
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-                                    <input type="password" class="form-control @error('password') is-invalid @enderror" wire:model.defer="password" id="password" autocomplete="new-password">
+                                    
+                                    {{-- El tipo de input cambia dinámicamente con AlpineJS --}}
+                                    <input :type="showPassword ? 'text' : 'password'" 
+                                        class="form-control @error('password') is-invalid @enderror" 
+                                        wire:model.defer="password" 
+                                        id="password" 
+                                        autocomplete="new-password">
+
+                                    {{-- Botón para alternar la visibilidad --}}
+                                    <button class="btn btn-outline-secondary" type="button" @click="showPassword = !showPassword">
+                                        {{-- El icono cambia dinámicamente --}}
+                                        <i class="fa-solid" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
                                 </div>
                                 @if($isEditMode)<small class="form-text text-muted">Dejar en blanco para no cambiar.</small>@endif
                                 @error('password') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="password_confirmation" class="form-label">Confirmar Contraseña @if(!$isEditMode)<span class="text-danger">*</span>@endif</label>
-                                 <div class="input-group">
+                                {{-- Grupo de input para confirmar la contraseña --}}
+                                <div class="input-group">
                                     <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-                                    <input type="password" class="form-control" wire:model.defer="password_confirmation" id="password_confirmation">
+
+                                    {{-- El tipo de input cambia dinámicamente con AlpineJS --}}
+                                    <input :type="showConfirmPassword ? 'text' : 'password'" 
+                                        class="form-control" 
+                                        wire:model.defer="password_confirmation" 
+                                        id="password_confirmation">
+                                    
+                                    {{-- Botón para alternar la visibilidad --}}
+                                    <button class="btn btn-outline-secondary" type="button" @click="showConfirmPassword = !showConfirmPassword">
+                                        {{-- El icono cambia dinámicamente --}}
+                                        <i class="fa-solid" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -239,7 +268,7 @@
                          </div>
                         @endif
 
-                        <div class="modal-footer mt-4">
+                        <div class="modal-footer mt-4 border-top pt-3">
                             <button type="button" class="btn btn-secondary" wire:click="closeModal"><i class="fa-solid fa-xmark me-1"></i> Cancelar</button>
                             <button type="submit" class="btn btn-primary">
                                 <span wire:loading.remove wire:target="saveUser">
