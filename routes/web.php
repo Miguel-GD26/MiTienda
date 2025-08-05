@@ -139,7 +139,8 @@ Route::middleware(['auth'])->group(function () {
     // Route::resource('usuarios', UserController::class)->except(['show']);
     // Route::patch('usuarios/{usuario}/toggle', [UserController::class, 'toggleStatus'])->name('usuarios.toggle');
     Route::get('usuarios', [App\Http\Controllers\UserController::class, 'index'])->name('usuarios.index');
-    Route::resource('roles', RoleController::class);
+    // Route::resource('roles', RoleController::class);
+    Route::get('roles', [App\Http\Controllers\RoleController::class, 'index'])->name('roles.index');
     Route::resource('permisos', PermissionController::class)->except(['show']);
     
     // Gestión de Clientes (Admins)

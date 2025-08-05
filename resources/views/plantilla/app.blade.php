@@ -30,6 +30,7 @@
     <!--end::Required Plugin(AdminLTE)-->
     @livewireStyles
     @stack('estilos')
+    
 
   </head>
   <!--end::Head-->
