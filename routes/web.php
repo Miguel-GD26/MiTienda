@@ -45,21 +45,24 @@ Route::middleware([RedirectAdminsFromWelcome::class])->group(function () {
 Route::middleware('guest')->group(function () {
     // Login
     Route::get('login', fn() => view('autenticacion.login'))->name('login');
-    Route::post('login', [AuthController::class, 'login'])->name('login.post');
+    //Route::post('login', [AuthController::class, 'login'])->name('login.post');
 
     // Registro
-    Route::get('/registro', [RegisterController::class, 'showRegistroForm'])->name('registro');
-    Route::post('/registro', [RegisterController::class, 'registrar'])->name('registro.store');
+    // Route::get('/registro', [RegisterController::class, 'showRegistroForm'])->name('registro');
+    // Route::post('/registro', [RegisterController::class, 'registrar'])->name('registro.store');
+    // Route::get('/verification/verify', [VerificationCodeController::class, 'showForm'])->name('verification.code.form');
+    // Route::post('/verification/verify', [VerificationCodeController::class, 'verify'])->name('verification.code.verify');
+    // Route::get('/verification/resend', [VerificationCodeController::class, 'resend'])->name('verification.code.resend');
+
+
+    //Route::get('/registro', \App\Livewire\Auth\Register::class)->name('registro');
+    Route::get('/registro', fn() => view('autenticacion.registro'))->name('registro');
 
     // Recuperación de contraseña
     Route::get('password/reset', [ResetPasswordController::class, 'showRequestForm'])->name('password.request');
     Route::post('password/email', [ResetPasswordController::class, 'sendResetLinkEmail'])->name('password.send-link');
     Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('password/reset', [ResetPasswordController::class, 'resetPassword'])->name('password.update');
-
-    Route::get('/verification/verify', [VerificationCodeController::class, 'showForm'])->name('verification.code.form');
-    Route::post('/verification/verify', [VerificationCodeController::class, 'verify'])->name('verification.code.verify');
-    Route::get('/verification/resend', [VerificationCodeController::class, 'resend'])->name('verification.code.resend');
 
     Route::get('/auth/google/redirect', [SocialiteController::class, 'redirect'])->name('login.google.redirect');
     Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->name('login.google.callback');
