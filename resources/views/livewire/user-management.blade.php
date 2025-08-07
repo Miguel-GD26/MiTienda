@@ -15,7 +15,9 @@
             <div class="card-header">
                 <div class="input-group">
                     <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Buscar por nombre o email...">
-                    <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <button class="btn btn-primary" type="button">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
+                    </button>
                 </div>
             </div>
             <div class="card-body p-0">
