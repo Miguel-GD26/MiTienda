@@ -97,11 +97,6 @@
             </button>
         </div>
     </form>
-
-    {{-- Enlace para iniciar sesión --}}
-    <div class="text-center mt-4">
-        <small>¿Ya tienes una cuenta? <a href="{{ route('login') }}" class="fw-bold">Inicia Sesión aquí</a></small>
-    </div>
 </div>
 @script
 <script>

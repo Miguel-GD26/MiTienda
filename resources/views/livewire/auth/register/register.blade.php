@@ -35,9 +35,9 @@
         @elseif($step == 2)
             @include('livewire.auth.register.verify-code-step')
         @endif
-
+        
         <div class="card-footer text-center py-3">
-            <a href="{{ route('login') }}">¿Ya tienes una cuenta? Inicia Sesión</a>
+             <small>¿Ya tienes una cuenta? <a href="{{ route('login') }}" class="fw-bold">Inicia Sesión aquí</a></small>
         </div>
     </div>
 </div>
