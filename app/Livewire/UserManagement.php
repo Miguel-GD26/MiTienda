@@ -16,27 +16,31 @@ class UserManagement extends Component
 {
     use WithPagination;
 
+    //--- ESTADO DEL COMPONENTE Y PROPIEDADES ---//
     public $search = '';
     public $perPage = 10;
     protected $paginationTheme = 'bootstrap';
 
+    //--- CONTROL DE MODALES ---//
     public $showModal = false;
     public $userId = null;
     public $isEditMode = false;
     
+    //--- CAMPOS DEL FORMULARIO ---//
     public $name, $email, $password, $password_confirmation, $role, $empresa_id;
-    
     public $activo;
-
     public $empresaOption = '';
     public $empresa_nombre, $empresa_rubro, $empresa_telefono_whatsapp;
 
+    //--- MODAL DE CONFIRMACIÓN ---//
     public $showConfirmModal = false;
     public $confirmModalType = 'delete';
     public $userToDeleteOrToggle;
 
+    //--- LISTENERS ---//
     protected $listeners = ['userUpdated' => '$refresh'];
 
+    //--- REGLAS DE VALIDACIÓN ---//
     protected function rules()
     {
         $rules = [
@@ -72,6 +76,7 @@ class UserManagement extends Component
         $this->validateOnly($propertyName);
     }
 
+    //--- GESTIÓN DEL MODAL DE EDICIÓN/CREACIÓN ---//
     public function openModal($userId = null)
     {
         $this->resetValidation();
@@ -117,6 +122,7 @@ class UserManagement extends Component
         $this->empresa_telefono_whatsapp = '';
     }
 
+    //--- ACCIONES CRUD (CREAR Y ACTUALIZAR) ---//
     public function saveUser()
     {
         if(is_numeric($this->empresaOption)){
@@ -174,9 +180,17 @@ class UserManagement extends Component
             ]);
         }
     }
-    
+    //--- ACCIONES DE CONFIRMACIÓN (ELIMINAR Y CAMBIAR ESTADO) ---//
     public function openConfirmModal($type, $userId)
     {
+        if ($type === 'delete' && auth()->id() == $userId) {
+             $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'No puedes eliminar tu propia cuenta de usuario.'
+            ]);
+            return;
+        }
+
         $this->userToDeleteOrToggle = User::findOrFail($userId);
         $this->confirmModalType = $type;
         $this->showConfirmModal = true;
@@ -197,25 +211,35 @@ class UserManagement extends Component
         }
     }
 
-
     private function deleteUser()
     {
         if ($this->userToDeleteOrToggle) {
             $user = $this->userToDeleteOrToggle;
 
+            // Validación: Un usuario no puede eliminarse a sí mismo.
+            if (auth()->id() === $user->id) {
+                $this->dispatch('alert', ['type' => 'error', 'message' => 'No puedes eliminar tu propia cuenta de usuario.']);
+                $this->closeConfirmModal();
+                return;
+            }
+
+            // Validación: No se puede eliminar al último superadministrador.
+            if ($user->hasRole('super_admin')) {
+                if (User::role('super_admin')->count() <= 1) {
+                    $this->dispatch('alert', ['type' => 'error', 'message' => 'No se puede eliminar al último superadministrador del sistema.']);
+                    $this->closeConfirmModal();
+                    return;
+                }
+            }
+
+            // Validación: No se puede eliminar al último administrador de una empresa.
             if ($user->empresa && $user->hasRole('admin')) {
                 $otherAdminsCount = User::where('empresa_id', $user->empresa_id)
                                         ->where('id', '!=', $user->id)
-                                        ->whereHas('roles', function ($query) {
-                                            $query->where('name', 'admin');
-                                        })
-                                        ->count();
+                                        ->role('admin')->count();
 
                 if ($otherAdminsCount === 0) {
-                    $this->dispatch('alert', [
-                        'type' => 'warning',
-                        'message' => 'No se puede eliminar al último administrador de la empresa.'
-                    ]);
+                    $this->dispatch('alert', ['type' => 'warning', 'message' => 'No se puede eliminar al último administrador de la empresa.']);
                     $this->closeConfirmModal();
                     return; 
                 }
@@ -232,11 +256,9 @@ class UserManagement extends Component
         if ($this->userToDeleteOrToggle) {
             $user = $this->userToDeleteOrToggle;
 
+            // Validación: Un usuario no puede desactivarse a sí mismo.
             if (auth()->id() === $user->id) {
-                $this->dispatch('alert', [
-                    'type' => 'error',
-                    'message' => 'No puedes cambiar tu propio estado de actividad.'
-                ]);
+                $this->dispatch('alert', ['type' => 'error', 'message' => 'No puedes cambiar tu propio estado de actividad.']);
                 $this->closeConfirmModal();
                 return; 
             }
@@ -244,36 +266,28 @@ class UserManagement extends Component
             $user->activo = !$user->activo;
             $user->save();
 
-            if (!$user->activo) {
-                $this->dispatch('alert', [
-                    'type' => 'warning',
-                    'message' => "El usuario {$user->name} ha sido desactivado y no podrá iniciar sesión."
-                ]);
-            } else {
-                $this->dispatch('alert', [
-                    'type' => 'success',
-                    'message' => "El usuario {$user->name} ha sido activado."
-                ]);
-            }
-            
+            $message = $user->activo ? "El usuario {$user->name} ha sido activado." : "El usuario {$user->name} ha sido desactivado y no podrá iniciar sesión.";
+            $type = $user->activo ? 'success' : 'warning';
+
+            $this->dispatch('alert', ['type' => $type, 'message' => $message]);
             $this->closeConfirmModal();
         }
     }
     
-
+    //--- MÉTODO DE RENDERIZACIÓN ---//
     public function render()
     {
         $query = User::with('roles', 'empresa');
+
         if (!auth()->user()->hasRole('super_admin')) {
             $query->where('empresa_id', auth()->user()->empresa_id);
         }
 
         $searchTerm = trim($this->search);
-
         if (!empty($searchTerm)) {
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'like', '%' . $searchTerm . '%')
-                ->orWhere('email', 'like', '%' . $searchTerm . '%');
+                  ->orWhere('email', 'like', '%' . $searchTerm . '%');
             });
         }
         
@@ -282,7 +296,7 @@ class UserManagement extends Component
         if ($registros->isEmpty() && !empty($searchTerm)) {
             $this->dispatch('alert', [
                 'type' => 'info',
-                'message' => "No se encontraron usuarios para '{$searchTerm}'."
+                'message' => "No se encontraron resultados para '{$searchTerm}'."
             ]);
         }
         

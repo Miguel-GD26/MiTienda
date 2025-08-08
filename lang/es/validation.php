@@ -32,12 +32,15 @@ return [
         'password' => 'contraseña',
         'name'     => 'nombre',
     ],
+    'size' => [
+    'string'  => 'El campo :attribute debe contener :size caracteres.',
+    ],
     'min' => [
     'numeric' => 'El campo :attribute debe ser al menos :min.',
     'file' => 'El archivo :attribute debe tener al menos :min kilobytes.',
-    'string' => 'El campo :attribute debe contener al menos :min caracteres.',
+    'string' => 'Debe contener al menos :min caracteres.',
     'array' => 'El campo :attribute debe tener al menos :min elementos.',
     ],
     'digits' => 'El campo :attribute debe tener exactamente :digits dígitos.',
-    'required_if' => 'El campo :attribute es obligatorio cuando :other es :value.',
+    'required_if' => 'El campo :attribute es obligatorio',
 ];

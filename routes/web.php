@@ -22,11 +22,13 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\SocialiteController;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\WelcomeController;
+use App\Livewire\Auth\PasswordReset\ResetForm;
+
 
 // --- Importaciones de Middleware y Modelos ---
 use App\Http\Middleware\RedirectAdminsFromWelcome;
 use App\Http\Middleware\RememberStoreUrl;
-use App\Models\Pedido;
+use App\Models\Pedido;      
 
 
 
@@ -45,29 +47,25 @@ Route::middleware([RedirectAdminsFromWelcome::class])->group(function () {
 Route::middleware('guest')->group(function () {
     // Login
     Route::get('login', fn() => view('autenticacion.login'))->name('login');
-    //Route::post('login', [AuthController::class, 'login'])->name('login.post');
 
     // Registro
-    // Route::get('/registro', [RegisterController::class, 'showRegistroForm'])->name('registro');
-    // Route::post('/registro', [RegisterController::class, 'registrar'])->name('registro.store');
-    // Route::get('/verification/verify', [VerificationCodeController::class, 'showForm'])->name('verification.code.form');
-    // Route::post('/verification/verify', [VerificationCodeController::class, 'verify'])->name('verification.code.verify');
-    // Route::get('/verification/resend', [VerificationCodeController::class, 'resend'])->name('verification.code.resend');
-
-
-    //Route::get('/registro', \App\Livewire\Auth\Register::class)->name('registro');
     Route::get('/registro', fn() => view('autenticacion.registro'))->name('registro');
 
     // Recuperación de contraseña
-    Route::get('password/reset', [ResetPasswordController::class, 'showRequestForm'])->name('password.request');
-    Route::post('password/email', [ResetPasswordController::class, 'sendResetLinkEmail'])->name('password.send-link');
-    Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('password/reset', [ResetPasswordController::class, 'resetPassword'])->name('password.update');
-
-    Route::get('/auth/google/redirect', [SocialiteController::class, 'redirect'])->name('login.google.redirect');
-    Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->name('login.google.callback');
-    Route::get('/auth/google/complete', [SocialiteController::class, 'showCompleteForm'])->name('login.google.complete');
-    Route::post('/auth/google/complete', [SocialiteController::class, 'processCompleteForm'])->name('login.google.complete.store');
+    Route::get('password/reset', fn() => view('autenticacion.email'))->name('password.request');
+    Route::get('password/reset/{token}', function ($token) {
+        return view('autenticacion.reset', ['token' => $token]); // Pasamos el token como un dato   
+    })->name('password.reset');
+    
+    // Registro Google
+    Route::get('auth/google', [SocialiteController::class, 'redirect'])->name('login.google');
+    Route::get('auth/google/callback', [SocialiteController::class, 'callback']);
+    Route::get('auth/google/complete', function () {
+        if (!session()->has('socialite_user_data')) {
+            return redirect()->route('login')->with('error', 'Acceso inválido. Por favor, inicia sesión con Google.');
+        }
+        return view('autenticacion.complete-google-profile');
+    })->name('login.google.complete');
 
 });
 
@@ -141,9 +139,9 @@ Route::middleware(['auth'])->group(function () {
     // Gestión de Usuarios y Permisos (Admins)
     // Route::resource('usuarios', UserController::class)->except(['show']);
     // Route::patch('usuarios/{usuario}/toggle', [UserController::class, 'toggleStatus'])->name('usuarios.toggle');
-    Route::get('usuarios', [App\Http\Controllers\UserController::class, 'index'])->name('usuarios.index');
+    Route::get('usuarios', [UserController::class, 'index'])->name('usuarios.index');
     // Route::resource('roles', RoleController::class);
-    Route::get('roles', [App\Http\Controllers\RoleController::class, 'index'])->name('roles.index');
+    Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
     Route::resource('permisos', PermissionController::class)->except(['show']);
     
     // Gestión de Clientes (Admins)

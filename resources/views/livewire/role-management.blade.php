@@ -14,12 +14,13 @@
         </div>
         
         <div class="card shadow-sm mb-4">
-            <div class="card-body p-3">
+            <div class="card-header bg-light">
                 <div class="input-group">
-                    <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Buscar por nombre del rol (mín. 3 caracteres)...">
-                    <button class="btn btn-primary" type="button">
-                        <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
-                    </button>
+                    <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Buscar por nombre o email...">
+                    <span class="input-group-text" wire:loading wire:target="search">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    </span>
                 </div>
             </div>
         </div>
@@ -32,6 +33,7 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h5 class="card-title text-primary">{{ $reg->name }} </h5>
+                                    <br>
                                     <small class="text-muted">ID: {{ $reg->id }} | {{ $reg->permissions->count() }} permisos</small>
                                 </div>
                                 <div class="btn-group">

@@ -6,28 +6,48 @@
         <p class="text-muted">Introduce tus credenciales para acceder.</p>
     </div>
 
-    {{-- CAMPO: CORREO ELECTRÓNICO --}}
-    <div class="input-div one mb-2">
-        <div class="i"><i class="fas fa-user"></i></div>
-        <div class="div">
-            {{-- wire:model.blur valida el campo cuando el usuario sale de él --}}
-            <input type="email" wire:model.blur="email" class="input @error('email') is-invalid @enderror"
-                placeholder="Correo electrónico" required autocomplete="email">
-        </div>
+    {{-- CAMPO: CORREO ELECTRÓNICO (NUEVO ESTILO) --}}
+    <div class="material-form-group-with-icon mb-4">
+        <i class="fas fa-user fa-fw form-icon"></i>
+        <input 
+            id="email" 
+            type="email" 
+            wire:model.live="email"
+            class="material-form-control-with-icon @error('email') is-invalid @enderror"
+            placeholder=" "
+            autocomplete="email"
+        >
+        <label for="email" class="material-form-label">Correo electrónico</label>
+        @error('email') 
+            <div class="text-danger small mt-1">{{ $message }}</div>
+        @enderror
     </div>
-    {{-- Mensaje de error específico para el campo email --}}
-    @error('email') <span class="text-danger small d-block mb-3">{{ $message }}</span> @enderror
 
-    {{-- CAMPO: CONTRASEÑA --}}
-    <div class="input-div pass mb-2">
-        <div class="i"><i class="fas fa-lock"></i></div>
-        <div class="div">
-            <input type="password" wire:model="password" class="input @error('password') is-invalid @enderror" 
-                   placeholder="Contraseña" required autocomplete="current-password">
-        </div>
+    {{-- CAMPO: CONTRASEÑA (NUEVO ESTILO CON VISIBILIDAD) --}}
+    <div class="material-form-group-with-icon mb-4" x-data="{ show: false }">
+        <i class="fas fa-lock fa-fw form-icon"></i>
+        <input 
+            id="password" 
+            :type="show ? 'text' : 'password'"
+            wire:model.live="password"
+            class="material-form-control-with-icon @error('password') is-invalid @enderror"
+            placeholder=" "
+            autocomplete="current-password"
+        >
+        <label for="password" class="material-form-label">Contraseña</label>
+        
+        {{-- Botón para alternar visibilidad --}}
+        <i 
+            @click="show = !show" 
+            :class="show ? 'fas fa-eye-slash' : 'fas fa-eye'" 
+            class="password-toggle-icon"
+            aria-label="Mostrar u ocultar contraseña"
+        ></i>
+
+        @error('password') 
+            <div class="text-danger small mt-1">{{ $message }}</div>
+        @enderror
     </div>
-    {{-- Mensaje de error específico para el campo contraseña --}}
-    @error('password') <span class="text-danger small d-block mb-3">{{ $message }}</span> @enderror
 
     {{-- ENLACE: OLVIDASTE TU CONTRASEÑA --}}
     <div class="text-end mb-4">
@@ -37,14 +57,9 @@
     {{-- BOTÓN: ACCEDER CON ESTADO DE CARGA --}}
     <div class="d-grid mb-3">
         <button type="submit" class="btn btn-primary btn-lg fw-bold" wire:loading.attr="disabled" wire:target="authenticate">
-            {{-- Texto por defecto --}}
-            <span wire:loading.remove wire:target="authenticate">
-                ACCEDER
-            </span>
-            {{-- Texto y spinner mientras se procesa el login --}}
+            <span wire:loading.remove wire:target="authenticate">ACCEDER</span>
             <span wire:loading wire:target="authenticate">
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                Accediendo...
+                <span class="spinner-border spinner-border-sm"></span> Accediendo...
             </span>
         </button>
     </div>
@@ -56,7 +71,7 @@
     
     {{-- BOTÓN: LOGIN CON GOOGLE --}}
     <div class="d-grid">
-        <a href="{{ route('login.google.redirect') }}" class="btn btn-light border d-flex align-items-center justify-content-center gap-2 shadow-sm" style="height: 45px;">
+        <a href="{{ route('login.google') }}" class="btn btn-light border d-flex align-items-center justify-content-center gap-2 shadow-sm" style="height: 45px;">
             <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" style="width: 20px; height: 20px;">
             <span>Continuar con Google</span>
         </a>
