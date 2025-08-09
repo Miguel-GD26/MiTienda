@@ -241,43 +241,55 @@ class ProductoController extends Controller
         return collect();
     }
 
-     public function mostrarTienda(Empresa $empresa)
-    {
-        $productos = $empresa->productos()->with('categoria')->paginate(8);
-        $categorias = $empresa->categorias()->whereHas('productos')->get();
-        
-        $cartItems = $this->getCartItemsForView();
+    // En tu ProductoController.php
 
-        return view('tienda.index', [
-            'tienda' => $empresa,
-            'productos' => $productos,
-            'categorias' => $categorias,
-            'cartItems' => $cartItems,
-        ]);
+// MÉTODO 1: Carga inicial de la tienda
+public function mostrarTienda(Empresa $empresa)
+{
+    $productos = $empresa->productos()->with('categoria')->paginate(8);
+    
+    // --- LÍNEA AÑADIDA ---
+    // Le decimos que los enlaces de paginación deben apuntar a la ruta AJAX
+    $productos->withPath(route('tienda.productos.buscar_ajax', $empresa));
+
+    $categorias = $empresa->categorias()->whereHas('productos')->get();
+    $cartItems = $this->getCartItemsForView();
+
+    return view('tienda.index', [
+        'tienda' => $empresa,
+        'productos' => $productos,
+        'categorias' => $categorias,
+        'cartItems' => $cartItems,
+    ]);
+}
+
+// MÉTODO 2: Filtrado por categoría
+public function filtrarPorCategoria(Empresa $empresa, Categoria $categoria)
+{
+    if ($categoria->empresa_id !== $empresa->id) {
+        abort(404);
     }
+    
+    $productos = $categoria->productos()->paginate(8);
 
-    public function filtrarPorCategoria(Empresa $empresa, Categoria $categoria)
-    {
-        if ($categoria->empresa_id !== $empresa->id) {
-            abort(404);
-        }
-        
-        $productos = $categoria->productos()->paginate(8);
-        $categorias = $empresa->categorias()->withCount('productos')->whereHas('productos')->get();
-        
-        $cartItems = $this->getCartItemsForView();
+    // --- LÍNEA AÑADIDA ---
+    // También aquí, forzamos la ruta AJAX para la paginación
+    $productos->withPath(route('tienda.productos.buscar_ajax', $empresa));
+    $productos->appends(['categoria_id' => $categoria->id]); // Mantenemos el filtro de categoría
 
-        return view('tienda.index', [
-            'tienda' => $empresa,
-            'productos' => $productos,
-            'categorias' => $categorias,
-            'categoriaActual' => $categoria,
-            'cartItems' => $cartItems, 
-        ]);
-    }
+    $categorias = $empresa->categorias()->withCount('productos')->whereHas('productos')->get();
+    $cartItems = $this->getCartItemsForView();
 
-// En tu ProductoController.php
+    return view('tienda.index', [
+        'tienda' => $empresa,
+        'productos' => $productos,
+        'categorias' => $categorias,
+        'categoriaActual' => $categoria,
+        'cartItems' => $cartItems, 
+    ]);
+}
 
+// MÉTODO 3: La propia función AJAX (también la corregimos para ser 100% robusta)
 public function buscarPublicoAjax(Request $request, Empresa $empresa)
 {
     $query = $empresa->productos()->with('categoria');
@@ -289,31 +301,24 @@ public function buscarPublicoAjax(Request $request, Empresa $empresa)
         $query->where('nombre', 'like', '%' . $request->q . '%');
     }
 
-    // Pagina los resultados
     $productos = $query->paginate(8);
 
-    // --- LÍNEAS CLAVE DE LA SOLUCIÓN ---
-    // 1. Le decimos al paginador qué ruta usar, pasando los parámetros necesarios (el slug de la empresa).
+    // --- AÑADIMOS withPath() Y MANTENEMOS appends() ---
     $productos->withPath(route('tienda.productos.buscar_ajax', $empresa));
-    
-    // 2. Le decimos que conserve los parámetros de la búsqueda actual (q, categoria_id).
     $productos->appends($request->query());
-    // --- FIN DE LA SOLUCIÓN ---
 
     $cartItems = $this->getCartItemsForView();
 
-    // Asegúrate de que el nombre del parcial es 'tienda.producto'
     $productsHtml = view('tienda.producto', [
         'productos' => $productos,
         'tienda' => $empresa,
         'cartItems' => $cartItems,
     ])->render();
 
-    $categoriasParaFiltro = $empresa->categorias()->whereHas('productos')->get();
-
     return response()->json([
         'products_html' => $productsHtml,
-        'categories' => $categoriasParaFiltro
+        'categories' => $empresa->categorias()->whereHas('productos')->get()
     ]);
 }
+
 }

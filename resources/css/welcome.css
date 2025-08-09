@@ -10601,16 +10601,6 @@ h6,
   z-index: 1;
 }
 
-.overlay-top::before {
-  top: -1px;
-  background: url(../img/overlay-top.png);
-}
-
-.overlay-bottom::after {
-  bottom: -1px;
-  background: url(../img/overlay-bottom.png);
-}
-
 .carousel-caption {
   top: 0;
   left: 0;
