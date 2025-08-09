@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Empresa extends Model
 
 {
-    protected $fillable = ['nombre', 'slug', 'rubro','telefono_whatsapp','logo_url'];
+    protected $fillable = ['nombre', 'slug', 'rubro','telefono_whatsapp','logo_url','trial_ends_at','subscription_status'];
 
     public function usuarios()
     {
@@ -33,4 +33,13 @@ class Empresa extends Model
     {
         return $this->hasMany(Pedido::class);
     }
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'trial_ends_at' => 'datetime', // <-- Añadir esto
+    ];
 }

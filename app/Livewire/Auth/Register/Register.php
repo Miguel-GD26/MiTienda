@@ -94,9 +94,11 @@ class Register extends Component
             if ($this->tipo_usuario === 'empresa') {
                 $empresa = Empresa::create([
                     'nombre' => $data['empresa_nombre'],
-                    'telefono_whatsapp' => $data['empresa_telefono_whatsapp'],
-                    'rubro' => $data['empresa_rubro'],
                     'slug' => Str::slug($data['empresa_nombre']),
+                    'rubro' => $data['empresa_rubro'],
+                    'telefono_whatsapp' => $data['empresa_telefono_whatsapp'],
+                    'trial_ends_at' => now()->addDays(7),
+                    'subscription_status' => 'trialing',
                 ]);
                 $user->empresa_id = $empresa->id;
                 $user->save();

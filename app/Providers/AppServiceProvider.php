@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
+use App\Http\Middleware\CheckTrialStatus;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        App::booted(function () {
+            app('router')->pushMiddlewareToGroup('web', CheckTrialStatus::class);
+        });
+
         RateLimiter::for('login', function (Request $request) {
             // Limita a 5 intentos de login por minuto.
             // La clave se genera a partir del email del formulario y la IP del usuario.

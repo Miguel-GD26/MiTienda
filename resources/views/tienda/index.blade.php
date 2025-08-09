@@ -128,83 +128,68 @@
     </div>
 </div>
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{{-- Asegúrate que jQuery esté cargado --}}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
 <script>
 $(document).ready(function() {
+    
+    const productListContainer = $('#product-list-container');
+    const filtersForm = $('#product-filters');
+    // La URL base para filtros/búsquedas iniciales.
+    const baseUrl = "{{ route('tienda.productos.buscar_ajax', $tienda) }}"; 
+
     let searchTimer;
-    const ajaxSearchUrl = "{{ route('tienda.productos.buscar_ajax', $tienda) }}";
-    const productListContainer = $('#product-list-container'); // Definimos el contenedor una vez
-    const productFiltersForm = $('#product-filters'); // Referencia al formulario
 
-    function fetchProducts() {
-        const query = $('#q_filter').val();
-        const categoryId = $('#categoria_id_filter').val();
-        const categorySelect = $('#categoria_id_filter');
-
+    // --- FUNCIÓN ÚNICA PARA TODAS LAS ACTUALIZACIONES ---
+    function fetchProducts(url, data = null) {
         productListContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div></div>');
-
+        productListContainer.css('opacity', 0.8); // Efecto visual de carga
+        
         $.ajax({
-            url: ajaxSearchUrl,
+            url: url,
             type: 'GET',
-            data: { 
-                q: query,
-                categoria_id: categoryId
-            },
+            data: data,
+            dataType: 'json',
             success: function(response) {
                 productListContainer.html(response.products_html);
-
-                let currentCategorySelection = categoryId; // Usamos el valor que ya teníamos
-                categorySelect.empty().append('<option value="">Todas las categorías</option>');
-
-                if (response.categories && response.categories.length > 0) {
-                    $.each(response.categories, function(index, category) {
-                        categorySelect.append($('<option>', {
-                            value: category.id,
-                            text: category.nombre
-                        }));
-                    });
-                }
-                
-                categorySelect.val(currentCategorySelection);
             },
-            error: function() {
+            error: function(xhr) {
+                console.error("Error en AJAX:", xhr.responseText);
                 productListContainer.html('<div class="alert alert-danger text-center">Ocurrió un error al cargar los productos.</div>');
+            },
+            complete: function() {
+                productListContainer.css('opacity', 1); // Restaura la opacidad
             }
         });
     }
 
-    productFiltersForm.on('submit', function(event) {
-        event.preventDefault(); 
-        
-        clearTimeout(searchTimer); 
-        
-        fetchProducts();
-    });
+    // --- MANEJADORES DE EVENTOS ---
 
-    $('#q_filter').on('keyup', function(event) {
-        if (event.key === 'Enter') {
-            return;
+    // Al cambiar filtros o buscar (keyup, change, submit)
+    filtersForm.on('change keyup submit', function(event) {
+        if (event.type === 'submit') {
+            event.preventDefault(); // Prevenir recarga solo en el submit
         }
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(fetchProducts, 500); // 500ms de retraso
+        if (event.type === 'keyup' && event.key !== 'Enter') {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                fetchProducts(baseUrl, filtersForm.serialize());
+            }, 500);
+        } else {
+            clearTimeout(searchTimer);
+            fetchProducts(baseUrl, filtersForm.serialize());
+        }
     });
 
-    $('#categoria_id_filter').on('change', function() {
-        fetchProducts();
-    });
-
+    // AL HACER CLIC EN UN ENLACE DE PAGINACIÓN
     productListContainer.on('click', '.pagination a', function(event) {
         event.preventDefault(); 
-        const url = $(this).attr('href');
         
-        productListContainer.html('<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>');
-
-        $.get(url, function(data) {
-            productListContainer.html(data.products_html);
-        }).fail(function() {
-            productListContainer.html('<div class="alert alert-danger text-center">Error al cargar la página.</div>');
-        });
+        const paginationUrl = $(this).attr('href');
+        
+        fetchProducts(paginationUrl); 
     });
+
 });
 </script>
 @endpush

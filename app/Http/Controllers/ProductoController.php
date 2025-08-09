@@ -243,7 +243,7 @@ class ProductoController extends Controller
 
      public function mostrarTienda(Empresa $empresa)
     {
-        $productos = $empresa->productos()->with('categoria')->paginate(9);
+        $productos = $empresa->productos()->with('categoria')->paginate(8);
         $categorias = $empresa->categorias()->whereHas('productos')->get();
         
         $cartItems = $this->getCartItemsForView();
@@ -262,7 +262,7 @@ class ProductoController extends Controller
             abort(404);
         }
         
-        $productos = $categoria->productos()->paginate(9);
+        $productos = $categoria->productos()->paginate(8);
         $categorias = $empresa->categorias()->withCount('productos')->whereHas('productos')->get();
         
         $cartItems = $this->getCartItemsForView();
@@ -276,30 +276,44 @@ class ProductoController extends Controller
         ]);
     }
 
-    public function buscarPublicoAjax(Request $request, Empresa $empresa)
-    {
-        $query = $empresa->productos()->with('categoria');
-        if ($request->filled('categoria_id')) {
-            $query->where('categoria_id', $request->categoria_id);
-        }
-        if ($request->filled('q')) {
-            $query->where('nombre', 'like', '%' . $request->q . '%');
-        }
-        $productos = $query->paginate(12)->appends($request->query());
+// En tu ProductoController.php
 
-        $categoriasParaFiltro = $empresa->categorias()->whereHas('productos')->get();
+public function buscarPublicoAjax(Request $request, Empresa $empresa)
+{
+    $query = $empresa->productos()->with('categoria');
 
-        $cartItems = $this->getCartItemsForView();
-
-        $productsHtml = view('tienda.producto', [
-            'productos' => $productos,
-            'tienda' => $empresa,
-            'cartItems' => $cartItems,
-        ])->render();
-
-        return response()->json([
-            'products_html' => $productsHtml,
-            'categories' => $categoriasParaFiltro
-        ]);
+    if ($request->filled('categoria_id')) {
+        $query->where('categoria_id', $request->categoria_id);
     }
+    if ($request->filled('q')) {
+        $query->where('nombre', 'like', '%' . $request->q . '%');
+    }
+
+    // Pagina los resultados
+    $productos = $query->paginate(8);
+
+    // --- LÍNEAS CLAVE DE LA SOLUCIÓN ---
+    // 1. Le decimos al paginador qué ruta usar, pasando los parámetros necesarios (el slug de la empresa).
+    $productos->withPath(route('tienda.productos.buscar_ajax', $empresa));
+    
+    // 2. Le decimos que conserve los parámetros de la búsqueda actual (q, categoria_id).
+    $productos->appends($request->query());
+    // --- FIN DE LA SOLUCIÓN ---
+
+    $cartItems = $this->getCartItemsForView();
+
+    // Asegúrate de que el nombre del parcial es 'tienda.producto'
+    $productsHtml = view('tienda.producto', [
+        'productos' => $productos,
+        'tienda' => $empresa,
+        'cartItems' => $cartItems,
+    ])->render();
+
+    $categoriasParaFiltro = $empresa->categorias()->whereHas('productos')->get();
+
+    return response()->json([
+        'products_html' => $productsHtml,
+        'categories' => $categoriasParaFiltro
+    ]);
+}
 }

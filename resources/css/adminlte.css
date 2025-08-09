@@ -18072,3 +18072,45 @@ hacemos que la etiqueta sí flote para que no se solape con el texto.
   font-weight: 500;
   background-color: white; /* Fondo transparente para ver el borde rojo */
 }
+
+/* Contenedor principal cuando hay una selección */
+.material-form-group-with-icon.is-selected .material-form-label {
+    top: 0;
+    transform: translateY(-50%) scale(0.85);
+    font-weight: 500;
+    color: #6c757d; /* Color gris para la etiqueta */
+    background-color: white;
+}
+.material-form-group-with-icon.is-selected .form-icon {
+    top: 35%;
+    transform: translateY(0) scale(1);
+    color: #6c757d;
+}
+
+/* El div que simula un input deshabilitado */
+.selected-value {
+    /* background-color: #e9ecef; Fondo gris claro como un campo disabled */
+    cursor: not-allowed;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+/* El botón para cambiar/cancelar la selección */
+.btn-change-selection {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
+    z-index: 4;
+    border: none;
+    background: none;
+    padding: 0.25rem 0.5rem;
+    color: #6c757d;
+    cursor: pointer;
+    line-height: 1;
+}
+.btn-change-selection:hover {
+    color: #dc3545; /* Color rojo al pasar el mouse */
+}

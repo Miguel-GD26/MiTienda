@@ -36,6 +36,16 @@ class UserManagement extends Component
     public $showConfirmModal = false;
     public $confirmModalType = 'delete';
     public $userToDeleteOrToggle;
+    
+    //--- GESTIÓN DE SUSCRIPCIÓN ---//
+    public $subscription_status = '';
+    public $current_subscription_status = '';
+
+    public $searchEmpresa = ''; // El texto que el usuario escribe para buscar
+    public $empresaSeleccionadaNombre = '';
+
+    
+
 
     //--- LISTENERS ---//
     protected $listeners = ['userUpdated' => '$refresh'];
@@ -47,30 +57,76 @@ class UserManagement extends Component
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($this->userId)],
             'role' => ['required', Rule::exists('roles', 'name')],
-            'empresaOption' => 'nullable',
-            'activo' => 'boolean'
+            'activo' => 'boolean',
         ];
 
         if (!$this->isEditMode || !empty($this->password)) {
             $rules['password'] = 'required|string|min:8|confirmed';
-            $rules['password_confirmation'] = 'required';
         }
 
-        if (auth()->user()->hasRole('super_admin') && in_array($this->role, ['admin', 'vendedor', 'repartidor'])) {
-            if ($this->empresaOption === 'crear_nueva') {
-                $rules['empresa_nombre'] = 'required|string|max:255|unique:empresas,nombre';
-                $rules['empresa_rubro'] = 'nullable|string|max:255';
-                $rules['empresa_telefono_whatsapp'] = 'nullable|string|max:20';
-            } else {
-                if (!$this->isEditMode) {
-                    $rules['empresa_id'] = 'required|exists:empresas,id';
-                }
-            }
+        if (auth()->user()->hasRole('super_admin')) {
+            // Validación para el campo de selección de empresa.
+            $rules['empresaOption'] = [
+                Rule::requiredIf(
+                    !$this->isEditMode && 
+                    in_array($this->role, ['admin', 'vendedor', 'repartidor'])
+                )
+            ];
+
+            // Validación para los campos de "crear nueva empresa".
+            $rules['empresa_nombre'] = 'required_if:empresaOption,crear_nueva|string|max:255|unique:empresas,nombre';
+            $rules['empresa_rubro'] = 'required_if:empresaOption,crear_nueva|string|max:255';
+            $rules['empresa_telefono_whatsapp'] = 'required_if:empresaOption,crear_nueva|string|digits:9';
         }
         
         return $rules;
     }
     
+    
+
+    public function updatedSearch()
+    {
+        // Resetea la paginación principal cuando se busca en la tabla.
+        $this->resetPage();
+    }
+
+    public function loadEmpresas()
+    {
+        $query = trim($this->searchEmpresa);
+        $perPage = 2;
+
+        // Ahora guardamos todo el objeto paginador en la propiedad pública
+        $this->empresaResults = Empresa::where('nombre', 'like', '%' . $query . '%')
+            ->latest()
+            ->paginate($perPage, ['*'], 'empresaPage');
+    }
+
+
+    // --- NUEVO MÉTODO PARA CARGAR LA SIGUIENTE PÁGINA ---
+    public function loadMoreEmpresas()
+    {
+        $this->empresaPage = 1; 
+        $this->loadEmpresas();
+    }
+
+    public function updatedEmpresaPage()
+    {
+        $this->loadEmpresas();
+    }
+    
+    public function selectEmpresa($empresaId, $empresaNombre)
+    {
+        $this->empresa_id = $empresaId;
+        $this->empresaOption = $empresaId;
+        $this->empresaSeleccionadaNombre = $empresaNombre; // Guardamos el nombre
+        $this->searchEmpresa = '';
+        $this->resetPage('empresaPage'); 
+    }
+    public function cambiarEmpresa()
+    {
+        $this->reset(['empresa_id', 'empresaOption', 'empresaSeleccionadaNombre', 'searchEmpresa']);
+        $this->resetPage('empresaPage');
+    }
     public function updated($propertyName)
     {
         $this->validateOnly($propertyName);
@@ -83,7 +139,7 @@ class UserManagement extends Component
         $this->resetInputFields();
 
         if ($userId) {
-            $user = User::findOrFail($userId);
+            $user = User::with('empresa')->findOrFail($userId);
             $this->userId = $user->id;
             $this->name = $user->name;
             $this->email = $user->email;
@@ -91,6 +147,10 @@ class UserManagement extends Component
             $this->empresa_id = $user->empresa_id;
             $this->activo = $user->activo;
             $this->isEditMode = true;
+            if ($user->empresa) {
+                $this->current_subscription_status = $user->empresa->subscription_status;
+                $this->subscription_status = $user->empresa->subscription_status;
+            }
         } else {
             $this->isEditMode = false;
             $this->activo = true;
@@ -120,6 +180,11 @@ class UserManagement extends Component
         $this->empresa_nombre = '';
         $this->empresa_rubro = '';
         $this->empresa_telefono_whatsapp = '';
+        $this->subscription_status = '';
+        $this->searchEmpresa = '';
+        $this->empresaSeleccionadaNombre = '';
+        $this->empresaPage = 1;
+        $this->empresaResults = null; 
     }
 
     //--- ACCIONES CRUD (CREAR Y ACTUALIZAR) ---//
@@ -142,6 +207,8 @@ class UserManagement extends Component
                         'slug' => Str::slug($validatedData['empresa_nombre']),
                         'rubro' => $this->empresa_rubro,
                         'telefono_whatsapp' => $this->empresa_telefono_whatsapp,
+                        'trial_ends_at' => now()->addDays(7),
+                        'subscription_status' => 'trialing',
                     ]);
                     $empresaId = $empresa->id;
                 }
@@ -163,6 +230,31 @@ class UserManagement extends Component
             $user = User::updateOrCreate(['id' => $this->userId], $userData);
             $user->syncRoles($this->role);
 
+            // --- INICIO DEL CAMBIO: Lógica de suscripción mejorada --- //
+            if ($this->isEditMode && auth()->user()->hasRole('super_admin') && $user->empresa) {
+                // Si el estado de la suscripción ha cambiado
+                if ($this->subscription_status !== $this->current_subscription_status) {
+                    $updateData = ['subscription_status' => $this->subscription_status];
+
+                    // Lógica de negocio para manejar la fecha de prueba según el nuevo estado
+                    switch ($this->subscription_status) {
+                        case 'trialing':
+                            // Si se vuelve a poner en prueba, se asignan 7 días más.
+                            $updateData['trial_ends_at'] = now()->addDays(7);
+                            break;
+                        case 'active':
+                        case 'past_due':
+                        case 'canceled':
+                            // Para cualquier otro estado, el período de prueba ya no aplica.
+                            $updateData['trial_ends_at'] = null;
+                            break;
+                    }
+
+                    $user->empresa->update($updateData);
+                }
+            }
+            // --- FIN DEL CAMBIO --- //
+
             DB::commit();
             
             $this->dispatch('alert', [
@@ -180,6 +272,7 @@ class UserManagement extends Component
             ]);
         }
     }
+    
     //--- ACCIONES DE CONFIRMACIÓN (ELIMINAR Y CAMBIAR ESTADO) ---//
     public function openConfirmModal($type, $userId)
     {
@@ -216,14 +309,12 @@ class UserManagement extends Component
         if ($this->userToDeleteOrToggle) {
             $user = $this->userToDeleteOrToggle;
 
-            // Validación: Un usuario no puede eliminarse a sí mismo.
             if (auth()->id() === $user->id) {
                 $this->dispatch('alert', ['type' => 'error', 'message' => 'No puedes eliminar tu propia cuenta de usuario.']);
                 $this->closeConfirmModal();
                 return;
             }
 
-            // Validación: No se puede eliminar al último superadministrador.
             if ($user->hasRole('super_admin')) {
                 if (User::role('super_admin')->count() <= 1) {
                     $this->dispatch('alert', ['type' => 'error', 'message' => 'No se puede eliminar al último superadministrador del sistema.']);
@@ -232,7 +323,6 @@ class UserManagement extends Component
                 }
             }
 
-            // Validación: No se puede eliminar al último administrador de una empresa.
             if ($user->empresa && $user->hasRole('admin')) {
                 $otherAdminsCount = User::where('empresa_id', $user->empresa_id)
                                         ->where('id', '!=', $user->id)
@@ -256,7 +346,6 @@ class UserManagement extends Component
         if ($this->userToDeleteOrToggle) {
             $user = $this->userToDeleteOrToggle;
 
-            // Validación: Un usuario no puede desactivarse a sí mismo.
             if (auth()->id() === $user->id) {
                 $this->dispatch('alert', ['type' => 'error', 'message' => 'No puedes cambiar tu propio estado de actividad.']);
                 $this->closeConfirmModal();
@@ -273,10 +362,42 @@ class UserManagement extends Component
             $this->closeConfirmModal();
         }
     }
+
+public function buscarTodo()
+{
+    $this->resultados = Empresa::all();
+}
+
+public function updatedSearchEmpresa($value)
+{
+    $this->resultados = Empresa::where('nombre', 'like', "%{$value}%")->get();
+}
+
     
     //--- MÉTODO DE RENDERIZACIÓN ---//
     public function render()
     {
+
+        $empresaPaginator = null;
+        if ($this->showModal && !$this->isEditMode && !$this->empresa_id) {
+            $queryRaw = $this->searchEmpresa; // sin trim
+            $query = trim($queryRaw);
+
+            if ($queryRaw === ' ') {
+                // Si es exactamente un espacio: mostrar todas las empresas
+                $empresaPaginator = Empresa::latest()
+                    ->paginate(2, ['*'], 'empresaPage');
+            } elseif ($query !== '') {
+                // Si hay texto real: buscar por nombre
+                $empresaPaginator = Empresa::where('nombre', 'like', '%' . $query . '%')
+                    ->latest()
+                    ->paginate(2, ['*'], 'empresaPage');
+            } else {
+                // Si está vacío y no es espacio: no mostrar nada
+                $empresaPaginator = null;
+            }
+        }
+
         $query = User::with('roles', 'empresa');
 
         if (!auth()->user()->hasRole('super_admin')) {
@@ -304,12 +425,14 @@ class UserManagement extends Component
             $q->where('name', '!=', 'super_admin');
         })->get();
         
+        //dd($roles->pluck('name')); // Muestra solo los nombres de los roles
         $empresas = auth()->user()->hasRole('super_admin') ? Empresa::all() : collect();
 
         return view('livewire.user-management', [
             'registros' => $registros,
             'roles' => $roles,
-            'empresas' => $empresas
+            'empresas' => $empresas,
+            'empresaPaginator' => $empresaPaginator
         ]);
     }
 }

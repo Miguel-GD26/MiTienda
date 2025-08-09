@@ -73,6 +73,9 @@
     @endif
     
     @include('plantilla.compartir')
+    
+    @livewireScripts
+    <script src="tom-select.complete.js"></script>
     <!--begin::Script-->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -112,7 +115,7 @@
     <!--end::OverlayScrollbars Configure-->
     <!--end::Script-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @livewireScripts
+    
     @stack('scripts')
 
   </body>

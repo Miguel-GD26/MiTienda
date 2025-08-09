@@ -28,6 +28,7 @@ use App\Livewire\Auth\PasswordReset\ResetForm;
 // --- Importaciones de Middleware y Modelos ---
 use App\Http\Middleware\RedirectAdminsFromWelcome;
 use App\Http\Middleware\RememberStoreUrl;
+use App\Http\Middleware\CheckTrialStatus;
 use App\Models\Pedido;      
 
 
@@ -40,6 +41,11 @@ Route::middleware([RedirectAdminsFromWelcome::class])->group(function () {
     Route::get('/categorias/lista', [CategoriaController::class, 'listar'])->name('categorias.list');
 });
 
+// Ruta para la página de prueba expirada
+Route::get('/trial-expired', function () {
+    return view('autenticacion.trial-expired');
+})->name('trial.expired')->middleware(['auth', CheckTrialStatus::class]);
+
 
 
 // 2. RUTAS PARA INVITADOS (Usuarios no autenticados)
@@ -50,6 +56,7 @@ Route::middleware('guest')->group(function () {
 
     // Registro
     Route::get('/registro', fn() => view('autenticacion.registro'))->name('registro');
+    
 
     // Recuperación de contraseña
     Route::get('password/reset', fn() => view('autenticacion.email'))->name('password.request');
@@ -66,6 +73,7 @@ Route::middleware('guest')->group(function () {
         }
         return view('autenticacion.complete-google-profile');
     })->name('login.google.complete');
+
 
 });
 

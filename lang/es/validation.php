@@ -41,6 +41,11 @@ return [
     'string' => 'Debe contener al menos :min caracteres.',
     'array' => 'El campo :attribute debe tener al menos :min elementos.',
     ],
-    'digits' => 'El campo :attribute debe tener exactamente :digits dígitos.',
+    'digits' => 'Debe tener :digits dígitos.',
     'required_if' => 'El campo :attribute es obligatorio',
+    'custom' => [
+        'empresaOption' => [
+            'required' => 'Debes seleccionar una empresa.',
+        ],
+    ],
 ];

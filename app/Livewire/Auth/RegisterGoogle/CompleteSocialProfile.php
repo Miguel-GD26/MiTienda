@@ -88,6 +88,7 @@ class CompleteSocialProfile extends Component
                     'telefono_whatsapp' => $this->empresa_telefono_whatsapp,
                     'rubro' => $this->empresa_rubro,
                     'slug' => Str::slug($this->empresa_nombre),
+                    'trial_ends_at' => now()->addDays(7),
                 ]);
                 $user->update(['empresa_id' => $empresa->id]);
                 $user->assignRole('admin');
