@@ -363,15 +363,15 @@ class UserManagement extends Component
         }
     }
 
-public function buscarTodo()
-{
-    $this->resultados = Empresa::all();
-}
+    public function buscarTodo()
+    {
+        $this->resultados = Empresa::all();
+    }
 
-public function updatedSearchEmpresa($value)
-{
-    $this->resultados = Empresa::where('nombre', 'like', "%{$value}%")->get();
-}
+    public function updatedSearchEmpresa($value)
+    {
+        $this->resultados = Empresa::where('nombre', 'like', "%{$value}%")->get();
+    }
 
     
     //--- MÉTODO DE RENDERIZACIÓN ---//

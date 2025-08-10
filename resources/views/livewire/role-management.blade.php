@@ -102,10 +102,6 @@
     <div class="modal fade show" style="display: block;" tabindex="-1" x-data @keydown.escape.window="$wire.closeModal()">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
-                {{-- 
-                    CORRECCIÓN 1: El x-data se mueve aquí, al <form>, para que todo su contenido,
-                    incluido el footer con el botón, esté dentro de su alcance.
-                --}}
                 <form wire:key="modal-role-{{ $roleId ?? 'new' }}"
                       x-data="{
                         allPermissions: {{ json_encode($allPermissions->pluck('name')) }},
@@ -133,7 +129,7 @@
                         }
                      }"
                      wire:loading.class.delay="pe-none opacity-50">
-                      
+                    @csrf
                     <div class="modal-header">
                         <h5 class="modal-title">
                             <i class="fa-solid {{ $isEditMode ? 'fa-user-shield' : 'fa-plus-square' }} me-2"></i>

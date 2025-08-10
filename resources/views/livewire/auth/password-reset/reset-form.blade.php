@@ -11,6 +11,7 @@
                 <div class="col-12 col-md-8">
                     <p class="text-muted">Confirma tu correo y elige una nueva contraseña.</p>
                     <form wire:submit.prevent="resetPassword">
+                        @csrf
                         <div class="material-form-group-with-icon mb-4">
                             <i class="fas fa-envelope fa-fw form-icon"></i>
                             <input id="email" type="email" wire:model.live="email" class="material-form-control-with-icon @error('email') is-invalid @enderror" placeholder=" ">

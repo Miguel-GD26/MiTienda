@@ -97,6 +97,7 @@
     <div class="card shadow-sm border-0 mb-5">
         <div class="card-body">
             <form id="product-filters" class="row g-3 align-items-center">
+                @csrf
                 <div class="col-md-5">
                      <div class="input-group">
                         <span class="input-group-text bg-light border-0"><i class="fa-solid fa-tags"></i></span>

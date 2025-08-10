@@ -13,6 +13,7 @@
 
     {{-- Formulario con el nuevo estilo --}}
     <form wire:submit.prevent="submit" novalidate class="position-relative">
+        @csrf
         <hr>
         <hr>
         <p class="text-muted small">Los campos con <span class="text-danger">*</span> son obligatorios.</p>

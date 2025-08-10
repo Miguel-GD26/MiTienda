@@ -171,6 +171,7 @@
                 </div>
                 <div class="modal-body">
                     <form wire:submit.prevent="saveUser" wire:loading.class="pe-none opacity-50" novalidate>
+                        @csrf
                         <h6 class="mb-3 text-primary border-bottom pb-2"><i
                                 class="fa-solid fa-id-card me-2"></i>Información Personal</h6>
                         <div class="row">
@@ -375,13 +376,24 @@
                         @endif
 
                         @if($isEditMode)
-                        <div class="mt-3">
+                        <div class="mt-3" 
+                            x-data="{ localActivo: @entangle('activo') }" 
+                            x-init="$watch('localActivo', value => $wire.set('activo', value))">
+                            
                             <label class="form-label d-block">Estado del Usuario</label>
+                            
                             <div class="form-check form-switch fs-5">
-                                <input class="form-check-input" type="checkbox" role="switch" id="activoSwitch"
-                                    wire:model.live="activo">
-                                <label class="form-check-label {{ $activo ? 'text-success' : 'text-danger' }}"
-                                    for="activoSwitch">{{ $activo ? 'Activo' : 'Inactivo' }}</label>
+                                <input class="form-check-input" 
+                                    type="checkbox" 
+                                    role="switch" 
+                                    id="activoSwitch"
+                                    x-model="localActivo"> {{-- Ahora controlado por Alpine --}}
+                                    
+                                <label class="form-check-label"
+                                    :class="localActivo ? 'text-success' : 'text-danger'" {{-- Clase dinámica de Alpine --}}
+                                    for="activoSwitch"
+                                    x-text="localActivo ? 'Activo' : 'Inactivo'"> {{-- Texto dinámico de Alpine --}}
+                                </label>
                             </div>
                         </div>
                         @endif

@@ -7,6 +7,7 @@
         <div class="row mb-3 align-items-center">
             <div class="col-md-6">
                 <form action="{{ route('categorias.list') }}" method="GET">
+                    @csrf
                     <div class="input-group">
                         <input type="text" class="form-control" name="texto" placeholder="Buscar categoría..."
                             value="{{ request('texto') }}">

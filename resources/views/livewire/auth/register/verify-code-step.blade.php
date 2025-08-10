@@ -8,6 +8,7 @@
 
     <div x-data="verificationForm()">
         <form wire:submit.prevent="verifyCode">
+            @csrf
             <div class="d-flex justify-content-center gap-2 my-4" @paste.window="handlePaste($event)">
                 @for ($i = 0; $i < 6; $i++) <input type="text" maxlength="1"
                     class="form-control verification-code-input @error('verification_code.' . $i) is-invalid @enderror"

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <!--begin::Head-->
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -10,11 +10,11 @@
     <meta name="author" content="TechHarbors" />
     <meta name="description" content="Sistema." />
     <meta name="keywords" content="Sistema" />
+    <!-- En el <head> de tu layout principal -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
   <!-- Font Awesome 6 (versión free) -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <script src="//unpkg.com/alpinejs" defer></script>
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!--end::Primary Meta Tags-->
     <!--begin::Fonts-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css" integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q=" crossorigin="anonymous" />
@@ -75,7 +75,9 @@
     @include('plantilla.compartir')
     
     @livewireScripts
-    <script src="tom-select.complete.js"></script>
+    <!-- <script src="//unpkg.com/alpinejs" defer></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!--begin::Script-->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -111,10 +113,32 @@
           });
         }
       });
+
+        document.addEventListener('livewire:load', function () {
+            
+            // Esta función especial de Livewire se ejecuta cuando la página expira.
+            Livewire.onPageExpired((response, message) => {
+                
+                // 1. Muestra una alerta amigable.
+                // Reemplaza esto con tu sistema de alertas (Toastr, SweetAlert, o AlpineJS).
+                // Ejemplo con el sistema de alertas que usas ('dispatch'):
+                window.dispatchEvent(new CustomEvent('alert', {
+                    detail: {
+                        type: 'warning',
+                        message: 'Tu sesión ha expirado. Serás redirigido para iniciar sesión de nuevo.'
+                    }
+                }));
+
+                // 2. Espera 3 segundos para que el usuario pueda leer la alerta.
+                setTimeout(() => {
+                    // 3. Redirige a la página de login.
+                    window.location.href = '{{ route("login") }}';
+                }, 3000); // 3000 milisegundos = 3 segundos
+            });
+
+        });
     </script>
-    <!--end::OverlayScrollbars Configure-->
-    <!--end::Script-->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     
     @stack('scripts')
 

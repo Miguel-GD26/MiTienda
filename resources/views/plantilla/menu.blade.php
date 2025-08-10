@@ -57,7 +57,7 @@
                     </a>
                     <div class="collapse ps-4 {{ $seguridadActiva ? 'show' : '' }}" id="adminMenu">
                         @can('user-list')
-                            <a href="{{ route('usuarios.index') }}" class="nav-link {{ request()->routeIs(['usuarios.index','usuarios.create','usuarios.edit']) ? 'active-item' : $colorTexto }}"><i class="fa-solid fa-users me-2"></i> Usuarios</a>
+                            <a href="{{ route('usuarios.index') }}" class="nav-link {{ request()->routeIs(['usuarios.index','usuarios.create','usuarios.edit']) ? 'active-item' : $colorTexto }}" ><i class="fa-solid fa-users me-2"></i> Usuarios</a>
                         @endcan
                         @can('rol-list')
                             <a href="{{ route('roles.index') }}" class="nav-link {{ request()->routeIs(['roles.index','roles.create','roles.edit']) ? 'active-item' : $colorTexto }}"><i class="fa-solid fa-user-tag me-2"></i> Roles</a>

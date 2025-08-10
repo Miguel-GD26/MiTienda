@@ -29,6 +29,7 @@
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white">
                 <form action="{{ route('empresas.index') }}" method="GET">
+                    @csrf
                     <div class="input-group">
                         <input type="text" class="form-control" name="texto" placeholder="Buscar por nombre..."
                             value="{{ request('texto') }}">

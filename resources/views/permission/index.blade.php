@@ -29,6 +29,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body p-3">
                 <form action="{{ route('permisos.index') }}" method="GET">
+                    @csrf
                     <div class="input-group">
                         <input type="text" class="form-control" name="texto" placeholder="Buscar por nombre..." value="{{ $texto ?? '' }}">
                         <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass me-1"></i> Buscar</button>

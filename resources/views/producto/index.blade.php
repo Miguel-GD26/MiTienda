@@ -39,6 +39,7 @@
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white">
                 <form action="{{ route('productos.index') }}" method="GET" class="d-flex flex-column flex-md-row gap-2">
+                    @csrf
                     @if(auth()->user()->hasRole('super_admin'))
                         <div class="flex-grow-1">
                             <select name="empresa_id" class="form-select" onchange="this.form.submit()">

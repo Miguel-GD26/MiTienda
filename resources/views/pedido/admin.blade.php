@@ -22,6 +22,7 @@
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white p-3">
                 <form action="{{ route('pedidos.index') }}" method="GET" class="row g-3 align-items-center">
+                    @csrf
                     @if(auth()->user()->hasRole('super_admin'))
                     <div class="col-md-4">
                         <select name="empresa_id" class="form-select form-select-sm" onchange="this.form.submit()">

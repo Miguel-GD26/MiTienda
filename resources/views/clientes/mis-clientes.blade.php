@@ -23,6 +23,7 @@
             <div class="card-header bg-white">
                 {{-- La acción de la ruta debe apuntar a la misma página --}}
                 <form action="{{ route('clientes.mitienda') }}" method="GET">
+                    @csrf
                     <div class="input-group">
                         <input type="text" class="form-control" name="texto" placeholder="Buscar por nombre o email..."
                             value="{{ request('texto') }}">

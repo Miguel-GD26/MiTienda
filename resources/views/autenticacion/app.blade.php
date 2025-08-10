@@ -42,9 +42,40 @@
     
     <!-- Bootstrap 5 Bundle (incluye Popper.js) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    
-    <!-- Para cualquier script específico de la página (aquí se inyecta tu sweetalert-listener) -->
+    <script>
+      document.addEventListener('livewire:load', function () {
+
+          Livewire.onPageExpired((response, message) => {
+              // --- AQUÍ ESTÁ LA MAGIA ---
+
+              // 1. Prevenir el alert() por defecto de Livewire
+              // Al no hacer nada con 'message' o 'confirm()', evitamos el pop-up.
+
+              // 2. Mostrar tu alerta personalizada.
+              // Asumiendo que tu sistema de alertas (dispatch('alert', ...))
+              // finalmente dispara un evento de navegador que puedes escuchar.
+              // Por ejemplo, si usas Alpine.js con un listener:
+              window.dispatchEvent(new CustomEvent('alert', {
+                  detail: {
+                      type: 'error', // O 'warning'
+                      message: 'Tu sesión ha expirado. Serás redirigido al inicio de sesión.'
+                  }
+              }));
+              
+              // Si usas Toastr directamente, sería aún más fácil:
+              // toastr.error('Tu sesión ha expirado. Serás redirigido al inicio de sesión.', 'Sesión Expirada');
+
+              // 3. Redirigir al login después de un breve retraso.
+              // Damos un par de segundos para que el usuario pueda leer la alerta.
+              setTimeout(() => {
+                  window.location.href = '{{ route("login") }}';
+              }, 3000); // 3000 milisegundos = 3 segundos
+
+              return false; // Buena práctica para detener cualquier otra acción.
+          });
+
+      });
+    </script>
     @stack('scripts')
     
   </body>

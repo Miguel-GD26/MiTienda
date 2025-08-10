@@ -31,7 +31,8 @@ use App\Http\Middleware\RememberStoreUrl;
 use App\Http\Middleware\CheckTrialStatus;
 use App\Models\Pedido;      
 
-
+use App\Livewire\UserManagement;
+use App\Livewire\RoleManagement;
 
 // 1. RUTAS PÚBLICAS (Accesibles por todos los visitantes)
 Route::middleware([RedirectAdminsFromWelcome::class])->group(function () {
@@ -147,8 +148,10 @@ Route::middleware(['auth'])->group(function () {
     // Gestión de Usuarios y Permisos (Admins)
     // Route::resource('usuarios', UserController::class)->except(['show']);
     // Route::patch('usuarios/{usuario}/toggle', [UserController::class, 'toggleStatus'])->name('usuarios.toggle');
+    //Route::get('/usuarios', UserManagement::class)->name('usuarios.index');
     Route::get('usuarios', [UserController::class, 'index'])->name('usuarios.index');
     // Route::resource('roles', RoleController::class);
+    //Route::get('/roles', RoleManagement::class)->name('roles.index');
     Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
     Route::resource('permisos', PermissionController::class)->except(['show']);
     
@@ -158,6 +161,7 @@ Route::middleware(['auth'])->group(function () {
     // Gestión de Empresas (SOLO Super Admin)
     Route::resource('empresas', EmpresaController::class);
 });
+
 
 // --- TIENDA PÚBLICA ---
 Route::middleware([RememberStoreUrl::class])
