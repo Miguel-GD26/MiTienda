@@ -290,6 +290,7 @@
                                     {{-- La lista de resultados --}}
                                     @if($empresaPaginator && $empresaPaginator->total() > 0)
                                     <div x-show="open" 
+                                        wire:key="empresa-dropdown-wrapper"
                                         class="dropdown-menu d-block position-absolute w-100 shadow-lg" 
                                         style="z-index: 1000;"
                                         x-transition>
@@ -297,6 +298,7 @@
                                         <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
                                             @foreach($empresaPaginator as $empresa)
                                                 <a href="#"
+                                                wire:key="empresa-{{ $empresa->id }}"
                                                 @click="open = false" 
                                                 wire:click.prevent="selectEmpresa({{ $empresa->id }}, '{{ addslashes($empresa->nombre) }}')"
                                                 class="list-group-item list-group-item-action">
