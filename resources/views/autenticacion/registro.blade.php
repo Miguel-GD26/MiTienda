@@ -5,8 +5,3 @@
 @section('contenido')
     @livewire('auth.register.register') 
 @endsection
-
-@push('scripts')
-    @include('plantilla.partials.sweetalert-listener')
-@endpush
-

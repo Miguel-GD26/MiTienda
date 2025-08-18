@@ -27,8 +27,6 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            // Limita a 5 intentos de login por minuto.
-            // La clave se genera a partir del email del formulario y la IP del usuario.
             return Limit::perMinute(5)->by(strtolower($request->email) . '|' . $request->ip());
         });
 
@@ -38,32 +36,37 @@ class AppServiceProvider extends ServiceProvider
 
         Paginator::useBootstrap();
 
+        // View Composer ahora es más simple y eficiente
         View::composer('welcome.navbar', function ($view) {
             
-            $cartItemCount = 0;
+            // Inicializamos las variables que SÍ necesitamos
             $returnUrl = session('url.store_before_login');
             $misTiendas = collect(); 
             
             $user = Auth::user();
 
+            // La lógica para $misTiendas y $returnUrl se mantiene
             if ($user && $user->hasRole('cliente')) {
-                $cart = $user->cart()->with('items.producto.empresa')->first();
-                if ($cart) {
-                    $cartItemCount = $cart->items->count();
-                    $firstItem = $cart->items->first();
-                    if ($firstItem) {
-                        $returnUrl = route('tienda.public.index', $firstItem->producto->empresa->slug);
-                    }
-                }
-
+                // Esta consulta es solo si el usuario es un cliente
                 if ($user->cliente) {
                     $misTiendas = $user->cliente->empresas()->orderBy('nombre')->get();
                 }
+
+                // Intentamos obtener la URL de la tienda desde el carrito,
+                // pero ya no necesitamos contar los ítems aquí.
+                $cart = $user->cart()->with('items.producto.empresa')->first();
+                if ($cart && $cart->items->isNotEmpty()) {
+                    $firstItem = $cart->items->first();
+                    if ($firstItem && $firstItem->producto) { // Verificación extra
+                        $returnUrl = route('tienda.public.index', $firstItem->producto->empresa->slug);
+                    }
+                }
             }
             
-            $view->with('cartItemCount', $cartItemCount)
-                ->with('returnUrl', $returnUrl)
-                ->with('misTiendas', $misTiendas);
+            // Pasamos solo las variables que la vista de navbar aún necesita.
+            // $cartItemCount ya no se pasa desde aquí.
+            $view->with('returnUrl', $returnUrl)
+                 ->with('misTiendas', $misTiendas);
         });
     }
 

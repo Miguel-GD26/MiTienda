@@ -28,9 +28,30 @@ class Producto extends Model
     {
         return $this->belongsTo(Empresa::class);
     }
+    
+    /**
+     * Devuelve true si el producto tiene un precio de oferta activo.
+     * (Este es tu código original, que usaremos en la vista).
+     * @return bool
+     */
     public function getIsOnSaleAttribute(): bool
     {
         return !is_null($this->precio_oferta) && $this->precio_oferta > 0;
+    }
+    
+    /**
+     * ¡NUEVO Y CRUCIAL!
+     * Este accesor devuelve el precio de oferta si existe, de lo contrario, el precio normal.
+     * Esta es ahora nuestra ÚNICA FUENTE DE VERDAD para el precio.
+     * @return float
+     */
+    public function getPrecioFinalAttribute(): float
+    {
+        // Reutilizamos tu propia lógica 'is_on_sale' para mantener la consistencia.
+        if ($this->is_on_sale) {
+            return (float)$this->precio_oferta;
+        }
+        return (float)$this->precio;
     }
 
     public function getIsOutOfStockAttribute(): bool

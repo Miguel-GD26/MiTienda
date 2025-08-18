@@ -7,26 +7,32 @@ use App\Models\Pedido;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
+    /**
+     * Muestra la página del carrito de compras.
+     */
     public function index()
     {
         $user = Auth::user();
-        $cart = $user->cart()->with('items.producto.empresa')->first();
-        $cartItems = $cart ? $cart->items : collect();
+        $cartItems = $user->cart ? $user->cart->items()->with('producto.empresa')->get() : collect();
         
         $cartTotal = $cartItems->sum(function ($item) {
-            return optional($item->producto)->precio * $item->cantidad ?? 0;
+            return optional($item->producto)->precio_final * $item->cantidad ?? 0;
         });
-
-        $empresa = $cartItems->isNotEmpty() ? $cartItems->first()->producto->empresa : null;
         
-        return view('tienda.cart', compact('cartItems', 'cartTotal', 'empresa'));
+        return view('tienda.cart', compact('cartItems', 'cartTotal'));
     }
 
+    /**
+     * Añade un producto al carrito.
+     */
     public function add(Request $request, Producto $producto)
     {
+        $request->validate(['quantity' => 'sometimes|integer|min:1']);
+        
         $user = Auth::user();
         $cantidadToAdd = $request->input('quantity', 1);
         $cart = $user->cart()->firstOrCreate();
@@ -40,7 +46,8 @@ class CartController extends Controller
         $currentQuantityInCart = $cartItem ? $cartItem->cantidad : 0;
 
         if (($currentQuantityInCart + $cantidadToAdd) > $producto->stock) {
-            return back()->with('error', "No puedes añadir más. Stock disponible: " . ($producto->stock - $currentQuantityInCart));
+            $stockRestante = $producto->stock - $currentQuantityInCart;
+            return back()->with('error', "No puedes añadir más. Stock disponible: $stockRestante.");
         }
 
         if ($cartItem) {
@@ -52,31 +59,70 @@ class CartController extends Controller
         return back()->with('mensaje', '"'.$producto->nombre.'" añadido al carrito!');
     }
 
+    /**
+     * Actualiza la cantidad de un producto y devuelve la información de precios más reciente.
+     */
     public function update(Request $request)
     {
-        $user = Auth::user();
-        $cart = $user->cart;
+        $request->validate([
+            'id' => 'required|integer|exists:productos,id',
+            'quantity' => 'required|integer|min:0',
+        ]);
 
-        if (!$cart || !$request->id || $request->quantity === null) {
-            return back()->with('error', 'No se pudo actualizar el carrito.');
+        $user = Auth::user();
+        if (!$cart = $user->cart) {
+            return $this->handleCartError($request, 'Carrito no encontrado.', 404);
         }
 
-        $cartItem = $cart->items()->where('producto_id', $request->id)->firstOrFail();
+        if (!$cartItem = $cart->items()->with('producto')->where('producto_id', $request->id)->first()) {
+             return $this->handleCartError($request, 'Producto no encontrado en el carrito.', 404);
+        }
+        
         $newQuantity = (int)$request->quantity;
+        $producto = $cartItem->producto;
+
+        if ($newQuantity > $producto->stock) {
+            $errorMsg = "Stock insuficiente. Solo quedan {$producto->stock} unidades.";
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'error' => $errorMsg], 422);
+            }
+            return back()->with('error', $errorMsg);
+        }
 
         if ($newQuantity <= 0) {
             $cartItem->delete();
-            return back()->with('mensaje', 'Producto eliminado del carrito.');
+            $message = 'Producto eliminado del carrito.';
+        } else {
+            $cartItem->update(['cantidad' => $newQuantity]);
+            $message = 'Carrito actualizado.';
         }
 
-        if ($newQuantity > $cartItem->producto->stock) {
-            return back()->with('error', "Stock insuficiente. Solo quedan {$cartItem->producto->stock} unidades.");
+        if ($request->wantsJson()) {
+            $cartTotal = $cart->fresh()->items->sum(fn($item) => optional($item->producto)->precio_final * $item->cantidad);
+            $itemSubtotal = $producto->precio_final * $newQuantity;
+
+            // ¡CRUCIAL! Preparamos un objeto con la información de precios más reciente.
+            $priceInfo = [
+                'isOnSale' => $producto->is_on_sale,
+                'displayPrice' => 'S/.' . number_format($producto->precio_final, 2),
+                'regularPrice' => 'S/.' . number_format($producto->precio, 2)
+            ];
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'cartTotal' => 'S/.' . number_format($cartTotal, 2),
+                'itemSubtotal' => 'S/.' . number_format($itemSubtotal, 2),
+                'itemPriceInfo' => $priceInfo // ¡Enviamos el nuevo objeto de precios!
+            ]);
         }
 
-        $cartItem->update(['cantidad' => $newQuantity]);
-        return back()->with('mensaje', 'Carrito actualizado.');
+        return back()->with('mensaje', $message);
     }
-
+    
+    /**
+     * Elimina un producto del carrito.
+     */
     public function remove(Request $request)
     {
         if($request->id && Auth::user()->cart) {
@@ -85,6 +131,9 @@ class CartController extends Controller
         return back()->with('mensaje', 'Producto eliminado del carrito.');
     }
 
+    /**
+     * Vacía todo el carrito de compras.
+     */
     public function clear()
     {
         if(Auth::user()->cart) {
@@ -93,6 +142,9 @@ class CartController extends Controller
         return back()->with('mensaje', 'El carrito ha sido vaciado.');
     }
 
+    /**
+     * Procesa el pedido, descuenta el stock y vacía el carrito.
+     */
     public function checkout(Request $request)
     {
         $user = Auth::user();
@@ -104,11 +156,10 @@ class CartController extends Controller
         
         try {
             $pedido = DB::transaction(function () use ($cart, $user, $request) {
-                $cliente = $user->cliente;
-                if (!$cliente) throw new \Exception('Perfil de cliente no encontrado.');
+                if (!$cliente = $user->cliente) throw new \Exception('Perfil de cliente no encontrado.');
                 
                 $empresa = $cart->items->first()->producto->empresa;
-                $total = $cart->items->sum(fn($item) => $item->producto->precio * $item->cantidad);
+                $total = $cart->items->sum(fn($item) => optional($item->producto)->precio_final * $item->cantidad);
 
                 $nuevoPedido = Pedido::create([
                     'cliente_id' => $cliente->id,
@@ -123,25 +174,38 @@ class CartController extends Controller
                     if ($producto->stock < $item->cantidad) {
                         throw new \Exception("Stock insuficiente para '{$producto->nombre}'.");
                     }
+                    
+                    $precioPagado = $producto->precio_final;
+                    
                     $nuevoPedido->detalles()->create([
                         'producto_id' => $item->producto_id,
                         'cantidad' => $item->cantidad,
-                        'precio_unitario' => $producto->precio,
-                        'subtotal' => $producto->precio * $item->cantidad,
+                        'precio_unitario' => $precioPagado,
+                        'subtotal' => $precioPagado * $item->cantidad,
                     ]);
                     $producto->decrement('stock', $item->cantidad);
                 }
 
-                $cliente->empresas()->syncWithoutDetaching($empresa->id);
                 $cart->items()->delete();
                 return $nuevoPedido;
             });
 
-            return redirect()->route('pedido.success', $pedido);
+            return redirect()->route('pedido.success', $pedido->id)->with('mensaje', '¡Tu pedido ha sido realizado con éxito!');
 
         } catch (\Exception $e) {
-            \Log::error('Error en checkout: ' . $e->getMessage());
-            return redirect()->route('cart.index')->with('error', $e->getMessage());
+            Log::error('Error en checkout para usuario ' . $user->id . ': ' . $e->getMessage());
+            return redirect()->route('cart.index')->with('error', 'Hubo un error al procesar tu pedido: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Función de ayuda para manejar errores de forma consistente.
+     */
+    private function handleCartError(Request $request, string $message, int $statusCode)
+    {
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'error' => $message], $statusCode);
+        }
+        return back()->with('error', $message);
     }
 }

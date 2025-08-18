@@ -3,7 +3,7 @@
   <!--begin::Head-->
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Sistema</title>
+    <title>@yield('titulo', 'Sistema')</title>
     <!--begin::Primary Meta Tags-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="title" content="Sistema" />
@@ -28,6 +28,7 @@
     <!--begin::Required Plugin(AdminLTE)-->
     @vite(['resources/css/adminlte.css'])
     <!--end::Required Plugin(AdminLTE)-->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.css" rel="stylesheet">
     @livewireStyles
     @stack('estilos')
     
@@ -75,9 +76,10 @@
     @include('plantilla.compartir')
     
     @livewireScripts
+    @include('plantilla.partials.sweetalert-listener')
     <!-- <script src="//unpkg.com/alpinejs" defer></script> -->
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    
     <!--begin::Script-->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -94,54 +96,9 @@
     @vite(['resources/js/adminlte.js'])
     <!--end::Required Plugin(AdminLTE)-->
     <!--begin::OverlayScrollbars Configure-->
-    <script>
-      const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
-      const Default = {
-        scrollbarTheme: 'os-theme-light',
-        scrollbarAutoHide: 'leave',
-        scrollbarClickScroll: true,
-      };
-      document.addEventListener('DOMContentLoaded', function () {
-        const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
-        if (sidebarWrapper && typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== 'undefined') {
-          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
-            scrollbars: {
-              theme: Default.scrollbarTheme,
-              autoHide: Default.scrollbarAutoHide,
-              clickScroll: Default.scrollbarClickScroll,
-            },
-          });
-        }
-      });
-
-        document.addEventListener('livewire:load', function () {
-            
-            // Esta función especial de Livewire se ejecuta cuando la página expira.
-            Livewire.onPageExpired((response, message) => {
-                
-                // 1. Muestra una alerta amigable.
-                // Reemplaza esto con tu sistema de alertas (Toastr, SweetAlert, o AlpineJS).
-                // Ejemplo con el sistema de alertas que usas ('dispatch'):
-                window.dispatchEvent(new CustomEvent('alert', {
-                    detail: {
-                        type: 'warning',
-                        message: 'Tu sesión ha expirado. Serás redirigido para iniciar sesión de nuevo.'
-                    }
-                }));
-
-                // 2. Espera 3 segundos para que el usuario pueda leer la alerta.
-                setTimeout(() => {
-                    // 3. Redirige a la página de login.
-                    window.location.href = '{{ route("login") }}';
-                }, 3000); // 3000 milisegundos = 3 segundos
-            });
-
-        });
-    </script>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     @stack('scripts')
-
   </body>
   <!--end::Body-->
 </html>

@@ -56,7 +56,11 @@ class Register extends Component
         $this->isLoading = false; 
         $this->dispatch('alert', ['type' => 'success', 'message' => '¡Registro casi listo! Te hemos enviado un código.']);
     }
-
+    /**
+     * Verifica el código y redirige.
+     *
+     * @return Redirector
+     */
     public function verifyCode()
     {
         $this->validate(
@@ -116,7 +120,7 @@ class Register extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             report($e);
-            return $this->redirectRoute('registro')->with('error', 'Ocurrió un error al finalizar tu registro.');
+            return redirectRoute('registro')->with('error', 'Ocurrió un error al finalizar tu registro.');
         }
 
         Auth::login($user);

@@ -17909,14 +17909,15 @@ html.maximized-card {
 
 
 /* Estilos para la Barra Lateral (SIDEBAR)  */
-.app-sidebar .nav-link{
+.app-sidebar .nav-link {
 
   align-items: center;
- 
+
 }
+
 .app-sidebar .nav-link.active-item {
   background-color: #ffffff;
-  color: #000000 !important;  
+  color: #000000 !important;
   border-radius: 50px;
   font-weight: bold;
   padding: 10px 20px;
@@ -17924,7 +17925,7 @@ html.maximized-card {
   align-items: center;
   margin-bottom: 10px;
   text-decoration: none;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .nav-link.active-item .icon-circle {
@@ -17943,14 +17944,14 @@ html.maximized-card {
 
 
 .app-sidebar .nav-link:hover {
-  background-color: #ffffff; 
+  background-color: #ffffff;
   opacity: 0.95;
   filter: alpha(opacity=50);
   zoom: 1;
   color: #000000 !important;
   cursor: pointer;
   font-weight: bold;
-  border-radius: 8px; 
+  border-radius: 8px;
   align-items: center;
 }
 
@@ -17972,7 +17973,8 @@ html.maximized-card {
   transform: translateY(-50%);
   left: 1rem;
   color: #6c757d;
-  transition: all 0.2s ease-in-out; /* Animación suave */
+  transition: all 0.2s ease-in-out;
+  /* Animación suave */
   pointer-events: none;
   z-index: 3;
 }
@@ -17990,8 +17992,8 @@ html.maximized-card {
   border: 1px solid #ced4da;
   border-radius: 0.375rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  padding: 0.75rem 3rem 0.75rem 3rem; 
-  
+  padding: 0.75rem 3rem 0.75rem 3rem;
+
 }
 
 .password-toggle-icon {
@@ -18004,12 +18006,13 @@ html.maximized-card {
   z-index: 4;
   transition: color 0.2s ease-in-out;
 }
+
 .password-toggle-icon:hover {
   color: #212529;
 }
 
 /* --- La Etiqueta Flotante --- */
-.material-form-control-with-icon ~ .material-form-label {
+.material-form-control-with-icon~.material-form-label {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -18023,12 +18026,13 @@ html.maximized-card {
 /* --- ESTADOS (Focus y Contenido) --- */
 
 /* La etiqueta flota SOLO cuando el input tiene foco o contenido, Y NO ES INVÁLIDO */
-.material-form-control-with-icon:focus:not(.is-invalid) ~ .material-form-label,
-.material-form-control-with-icon:not(:placeholder-shown):not(.is-invalid) ~ .material-form-label {
+.material-form-control-with-icon:focus:not(.is-invalid)~.material-form-label,
+.material-form-control-with-icon:not(:placeholder-shown):not(.is-invalid)~.material-form-label {
   top: 0;
   transform: translateY(-50%) scale(0.85);
   font-weight: 500;
-  background-color: white; /* Fondo para la "muesca" */
+  background-color: white;
+  /* Fondo para la "muesca" */
 }
 
 /* --- ESTILOS DE FOCO (Estado Normal) --- */
@@ -18037,7 +18041,8 @@ html.maximized-card {
   border-color: #86b7fe;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
-.material-form-control-with-icon:focus:not(.is-invalid) ~ .material-form-label,
+
+.material-form-control-with-icon:focus:not(.is-invalid)~.material-form-label,
 .material-form-group-with-icon:has(.material-form-control-with-icon:focus:not(.is-invalid)) .form-icon {
   color: #0d6efd;
 }
@@ -18055,10 +18060,11 @@ html.maximized-card {
 }
 
 
-.material-form-control-with-icon.is-invalid ~ .material-form-label,
+.material-form-control-with-icon.is-invalid~.material-form-label,
 .material-form-group-with-icon:has(.material-form-control-with-icon.is-invalid) .form-icon,
-.material-form-group-with-icon:has(.material-form-control-with-icon.is-invalid) .password-toggle-icon{
-  top: 35%; /* ajusta según tu altura de label */
+.material-form-group-with-icon:has(.material-form-control-with-icon.is-invalid) .password-toggle-icon {
+  top: 35%;
+  /* ajusta según tu altura de label */
   color: #dc3545;
 }
 
@@ -18066,51 +18072,66 @@ html.maximized-card {
 Opcional pero recomendado: Si un campo es inválido Y tiene contenido,
 hacemos que la etiqueta sí flote para que no se solape con el texto.
 */
-.material-form-control-with-icon.is-invalid:not(:placeholder-shown) ~ .material-form-label {
+.material-form-control-with-icon.is-invalid:not(:placeholder-shown)~.material-form-label {
   top: 0;
   transform: translateY(-50%) scale(0.85);
   font-weight: 500;
-  background-color: white; /* Fondo transparente para ver el borde rojo */
+  background-color: white;
+  /* Fondo transparente para ver el borde rojo */
 }
 
 /* Contenedor principal cuando hay una selección */
 .material-form-group-with-icon.is-selected .material-form-label {
-    top: 0;
-    transform: translateY(-50%) scale(0.85);
-    font-weight: 500;
-    color: #6c757d; /* Color gris para la etiqueta */
-    background-color: white;
+  top: 0;
+  transform: translateY(-50%) scale(0.85);
+  font-weight: 500;
+  color: #6c757d;
+  /* Color gris para la etiqueta */
+  background-color: white;
 }
+
 .material-form-group-with-icon.is-selected .form-icon {
-    top: 35%;
-    transform: translateY(0) scale(1);
-    color: #6c757d;
+  top: 35%;
+  transform: translateY(0) scale(1);
+  color: #6c757d;
 }
 
 /* El div que simula un input deshabilitado */
 .selected-value {
-    /* background-color: #e9ecef; Fondo gris claro como un campo disabled */
-    cursor: not-allowed;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 500;
+  /* background-color: #e9ecef; Fondo gris claro como un campo disabled */
+  cursor: not-allowed;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
 }
 
 /* El botón para cambiar/cancelar la selección */
 .btn-change-selection {
-    position: absolute;
-    top: 50%;
-    right: 0.75rem;
-    transform: translateY(-50%);
-    z-index: 4;
-    border: none;
-    background: none;
-    padding: 0.25rem 0.5rem;
-    color: #6c757d;
-    cursor: pointer;
-    line-height: 1;
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  z-index: 4;
+  border: none;
+  background: none;
+  padding: 0.25rem 0.5rem;
+  color: #6c757d;
+  cursor: pointer;
+  line-height: 1;
 }
+
 .btn-change-selection:hover {
-    color: #dc3545; /* Color rojo al pasar el mouse */
+  color: #dc3545;
+  /* Color rojo al pasar el mouse */
+}
+
+.spinner-container {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  /* Ajusta este valor según tu diseño */
+  transform: translateY(-50%);
+  z-index: 5;
+  /* Asegura que esté por encima del input */
 }

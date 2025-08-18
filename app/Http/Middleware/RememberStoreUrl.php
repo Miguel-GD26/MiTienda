@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route; // Importante para comprobar la ruta
 use Symfony\Component\HttpFoundation\Response;
 
 class RememberStoreUrl
@@ -16,21 +15,21 @@ class RememberStoreUrl
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $routeName = $request->route()->getName();
-        
-        // Lista de rutas de tienda que queremos "recordar"
-        $storeRoutes = [
-            'tienda.public.index',
-            'tienda.public.categoria',
-        ];
+        // Usaremos la clave 'url.intended' que es el estándar de Laravel para redirecciones post-login.
+        $intendedUrlKey = 'url.intended';
 
-        // Solo guardamos la URL si el usuario está visitando una de las rutas de la tienda.
-        // Esto evita que se sobrescriba la URL de la tienda si el usuario navega a /carrito.
-        if (in_array($routeName, $storeRoutes)) {
-            session(['url.store_before_login' => $request->fullUrl()]);
-        } else if (!auth()->check()) {
-            session(['url.store_before_login' => $request->fullUrl()]);
+        // 1. Si la URL actual ya es la de login o registro, no hacemos nada.
+        // Esto evita que se guarde la página de login como destino.
+        if ($request->routeIs('login', 'registro')) {
+            return $next($request);
+        }
 
+        // 2. Si es una petición GET (no un envío de formulario) y el usuario es un invitado...
+        if ($request->isMethod('get') && !auth()->check()) {
+            
+            // 3. Guardamos la URL completa en la sesión.
+            // Esto "recordará" cualquier página, incluyendo la de la tienda con el parámetro `&add_product=X`.
+            session([$intendedUrlKey => $request->fullUrl()]);
         }
         
         return $next($request);

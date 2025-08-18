@@ -1,7 +1,4 @@
 <script>
-    // Listener para las notificaciones Toast con SweetAlert2
-    // Este script se puede reutilizar en cualquier página que lo necesite.
-
     if (typeof Livewire !== 'undefined') {
         document.addEventListener('livewire:init', () => {
             Livewire.on('alert', (event) => {

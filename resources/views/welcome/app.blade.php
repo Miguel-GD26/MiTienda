@@ -3,14 +3,15 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Sistema</title>
+    
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="Free Website Template" name="keywords">
     <meta content="Free Website Template" name="description">
+    <title>@yield('titulo', 'Sistema')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Favicon -->
     <link href="{{asset('assets/img/ventas.png')}}" rel="icon">
-
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.css" rel="stylesheet">
     <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link
@@ -55,6 +56,7 @@
     @stack('estilos')
     @vite(['resources/css/welcome.css'])
     @stack('styles')
+    @livewireStyles
 </head>
 
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
@@ -73,16 +75,19 @@
         </main>
     </div>
     
+    @livewireScripts
+    @include('plantilla.partials.sweetalert-listener')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <!-- 2. Carga el BUNDLE de Bootstrap 5. El .bundle incluye Popper.js, necesario para Dropdowns, Tooltips, etc. -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <!-- 3. Carga otras librerías INDEPENDIENTES como Toastr -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <!-- Alpine.js (si lo usas) -->
-    <script src="//unpkg.com/alpinejs" defer></script>
+    <!-- <script src="//unpkg.com/alpinejs" defer></script> -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>  
     @stack('scripts') 
 </body>

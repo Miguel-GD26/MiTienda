@@ -29,6 +29,7 @@ class RoleManagement extends Component
 
     protected $listeners = ['roleUpdated' => '$refresh'];
 
+    // Tu método rules() está bien, ya que define todas las posibles validaciones.
     protected function rules()
     {
         return [
@@ -37,12 +38,12 @@ class RoleManagement extends Component
             'selectedPermissions.*' => 'exists:permissions,name',
         ];
     }
-    
+
     public function updated($propertyName)
     {
         $this->validateOnly($propertyName);
     }
-    
+
     public function openModal($roleId = null)
     {
         $this->resetInputFields();
@@ -81,15 +82,22 @@ class RoleManagement extends Component
         $this->isEditMode = false;
     }
 
-    public function saveRole($permissionsFromAlpine) 
+    public function saveRole()
     {
-        $this->selectedPermissions = $permissionsFromAlpine;
+        // ¡CORRECCIÓN! Validamos solo el campo 'name' explícitamente.
+        $validatedData = $this->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('roles')->ignore($this->roleId)],
+        ]);
 
-        $validatedData = $this->validate();
-        
         DB::beginTransaction();
         try {
-            $role = Role::updateOrCreate(['id' => $this->roleId], ['name' => $this->name]);
+            // Usamos el dato validado para mayor seguridad.
+            $role = Role::updateOrCreate(
+                ['id' => $this->roleId],
+                ['name' => $validatedData['name']]
+            );
+
+            // Usamos la propiedad pública que se sincroniza con Alpine.js
             $role->syncPermissions($this->selectedPermissions);
 
             DB::commit();
@@ -107,7 +115,6 @@ class RoleManagement extends Component
             }
 
             $this->closeModal();
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->dispatch('alert', [
@@ -116,9 +123,7 @@ class RoleManagement extends Component
             ]);
         }
     }
-   
-    
-    
+
     public function openConfirmModal($roleId)
     {
         $this->roleToDelete = Role::findOrFail($roleId);
@@ -128,7 +133,7 @@ class RoleManagement extends Component
         }
         $this->showConfirmModal = true;
     }
-    
+
     public function closeConfirmModal()
     {
         $this->showConfirmModal = false;
@@ -157,32 +162,40 @@ class RoleManagement extends Component
 
     public function updatedSearch($value)
     {
-        $this->resetPage();        
+        $this->resetPage();
     }
 
     public function render()
     {
         $user = Auth::user();
-        $query = Role::with('permissions');
+        $query = Role::withCount('permissions')->with('permissions');
 
         if (!$user->hasRole('super_admin')) {
             $query->where('name', '!=', 'super_admin');
         }
 
+        if (!Auth::user()->hasRole('super_admin')) {
+            $query->where('name', '!=', 'cliente');
+        }
+
+        // --- ¡CORRECCIÓN! APLICAMOS LA BÚSQUEDA PRIMERO ---
         $searchTerm = trim($this->search);
         if (!empty($searchTerm)) {
             $query->where('name', 'like', '%' . $searchTerm . '%');
         }
+        // --- FIN DE LA CORRECCIÓN ---
 
-        $registros = $query->orderBy('id', 'asc')->paginate(9);
-        
+        // La paginación siempre va al final de la construcción de la consulta
+        $registros = $query->orderBy('id', 'asc')->paginate(3);
+
+        // El mensaje de "no se encontraron resultados" se mantiene igual
         if ($registros->isEmpty() && !empty($searchTerm)) {
             $this->dispatch('alert', [
                 'type' => 'info',
                 'message' => "No se encontraron resultados para '{$searchTerm}'."
             ]);
         }
-        
+
         $allPermissions = Permission::all()->sortBy('name');
 
         return view('livewire.role-management', [

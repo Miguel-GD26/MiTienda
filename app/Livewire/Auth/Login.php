@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use App\Http\Controllers\CartController; // <-- 1. Importa el CartController
+use App\Models\Producto;                 // <-- 2. Importa el modelo Producto
+use Illuminate\Http\Request; 
 
 class Login extends Component
 {
@@ -28,7 +31,7 @@ class Login extends Component
         $this->validateOnly($propertyName);
     }
 
-    public function authenticate()
+    public function authenticate(Request $request)
     {
 
         $credentials = $this->validate();
@@ -67,6 +70,22 @@ class Login extends Component
 
         session()->regenerate();
 
+        if ($request->session()->has('url.intended') && strpos($request->session()->get('url.intended'), 'add_product=') !== false) {
+            
+            // Extraemos el ID del producto de la URL guardada
+            parse_str(parse_url($request->session()->get('url.intended'), PHP_URL_QUERY), $queryParams);
+            $productId = $queryParams['add_product'] ?? null;
+
+            if ($productId && $producto = Producto::find($productId)) {
+                // Creamos una instancia de CartController para usar su lógica de 'add'
+                $cartController = new CartController();
+                // Creamos una nueva Request para simular la cantidad (por defecto 1)
+                $addRequest = new Request(['quantity' => 1]);
+                // Llamamos al método 'add'
+                $cartController->add($addRequest, $producto);
+            }
+        }
+
         if ($user->hasRole(['super_admin', 'admin', 'vendedor', 'repartidor'])) {
             return $this->redirect('dashboard');
         }
@@ -76,7 +95,7 @@ class Login extends Component
                 $url = session()->pull('url.store_before_login');
                 return $this->redirect($url);
             }
-            return $this->redirectRoute('welcome');
+            return redirect()->intended(route('welcome'));
         }
         
         return $this->redirectRoute('welcome');

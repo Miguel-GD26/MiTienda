@@ -2,7 +2,7 @@
     <div class="container-fluid">
 
         <!-- Logo a la izquierda -->
-        <a href="{{ route('welcome') }}" class="navbar-brand px-lg-4 m-0">
+        <a href="{{ $returnUrl ?? route('welcome') }}" class="navbar-brand px-lg-4 m-0">
             <img src="{{ asset('assets/img/MiTienda2.png') }}" alt="Logo" class="navbar-logo">
         </a>
 
@@ -11,24 +11,23 @@
             @guest
                 <a href="{{ route('login', ['redirect' => request()->fullUrl()]) }}" class="nav-link text-white" >
                     <i class="fa-solid fa-right-to-bracket fa-lg"></i> Iniciar Sesión
-                    
                 </a>
             @endguest
 
             @auth
                 <!-- Menú desplegable del usuario (versión ícono) -->
                 <div class="nav-item dropdown ">
-                    <a href="#" class="nav-link dropdown-toggle px-3" data-toggle="dropdown">
+                    <a href="#" class="nav-link dropdown-toggle px-3" data-bs-toggle="dropdown">
                         <i class="fa-solid fa-circle-user fa-lg"></i>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-right text-capitalize">
+                    <div class="dropdown-menu dropdown-menu-end text-capitalize">
                         <div class="px-3 py-2">
                             <span class="d-block">Hola, {{ Auth::user()->name }}</span>
                         </div>
                         <div class="dropdown-divider"></div>
                         <a href="{{ route('perfil.edit') }}" class="dropdown-item" ><i class="fa-solid fa-user-cog me-2"></i> Mi Perfil</a>
                         @if(auth()->user()->hasRole('cliente'))
-                            <a class="dropdown-item" href="{{ route('pedidos.index') }}"><i class="fa-solid fa-receipt me-2"></i> Mis Pedidos</a>
+                            <a class="dropdown-item" href="{{ route('cliente.pedidos') }}"><i class="fa-solid fa-receipt me-2"></i> Mis Pedidos</a>
                         @endif
                         <div class="dropdown-divider"></div>
                         <form method="POST" action="{{ route('logout') }}">
@@ -38,22 +37,15 @@
                     </div>
                 </div>
 
-                <!-- Ícono del Carrito de Compras -->
+                <!-- Ícono del Carrito de Compras (Livewire) -->
                 @if(auth()->user()->hasRole('cliente'))
-                    <a href="{{ route('cart.index') }}" class="nav-link position-relative">
-                        <i class="fa-solid fa-shopping-cart fa-lg"></i>
-                        @if($cartItemCount > 0)
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                {{ $cartItemCount }}
-                            </span>
-                        @endif
-                    </a>
+                    @livewire('cart-counter')
                 @endif
             @endauth
         </div>
 
         <!-- Botón para móviles -->
-        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+        <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
             <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -67,14 +59,14 @@
                 @auth
                     @if($misTiendas->isNotEmpty())
                         <div class="nav-item dropdown">
-                            <a href="#" class="nav-link dropdown-toggle px-3" data-toggle="dropdown"><i class="fas fa-store me-1"></i> Mis Tiendas</a>
+                            <a href="#" class="nav-link dropdown-toggle px-3" data-bs-toggle="dropdown"><i class="fas fa-store me-1"></i> Mis Tiendas</a>
                             <div class="dropdown-menu dropdown-menu-end">
                                 @foreach($misTiendas as $tienda)
                                     <a href="{{ route('tienda.public.index', $tienda->slug) }}" class="dropdown-item">{{ $tienda->nombre }}</a>
                                 @endforeach
                             </div>
                         </div>
-                    @elseif($returnUrl)
+                    @elseif(isset($returnUrl) && $returnUrl)
                         <a href="{{ $returnUrl }}" class="nav-item nav-link px-3 {{ Request::url() == $returnUrl ? 'active' : '' }}">Tienda</a>
                     @endif
                 @endauth
@@ -97,13 +89,13 @@
                     @auth
                         <!-- Menú Usuario (versión con texto) -->
                         <div class="nav-item dropdown">
-                            <a href="#" class="nav-link dropdown-toggle px-3" data-toggle="dropdown">
+                            <a href="#" class="nav-link dropdown-toggle px-3" data-bs-toggle="dropdown">
                                 <i class="fa-solid fa-circle-user"></i> {{ Auth::user()->name }}
                             </a>
-                            <div class="dropdown-menu dropdown-menu-right text-capitalize">
+                            <div class="dropdown-menu dropdown-menu-end text-capitalize">
                                  <a href="{{ route('perfil.edit') }}" class="dropdown-item"><i class="fa-solid fa-user-cog me-2"></i> Mi Perfil</a>
                                 @if(auth()->user()->hasRole('cliente'))
-                                    <a class="dropdown-item" href="{{ route('pedidos.index') }}"><i class="fa-solid fa-receipt me-2"></i> Mis Pedidos</a>
+                                    <a class="dropdown-item" href="{{ route('cliente.pedidos') }}"><i class="fa-solid fa-receipt me-2"></i> Mis Pedidos</a>
                                     <hr class="dropdown-divider">
                                 @endif
                                 <form method="POST" action="{{ route('logout') }}">
@@ -113,17 +105,9 @@
                             </div>
                         </div>
                         
-                        <!-- Carrito -->
+                        <!-- Carrito (Livewire) -->
                         @if(auth()->user()->hasRole('cliente'))
-                            <a href="{{ route('cart.index') }}" class="nav-link position-relative">
-                                <i class="fa-solid fa-shopping-cart"></i>
-                                @if($cartItemCount > 0)
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        {{ $cartItemCount }}
-                                        
-                                    </span>
-                                @endif
-                            </a>
+                            @livewire('cart-counter')
                         @endif
                     @endauth
                 </div>

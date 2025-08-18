@@ -21,33 +21,3 @@
 </style>
 @endpush
 
-@push('scripts')
-    {{-- Script para activar el menú lateral --}}
-    <script>
-        if (document.getElementById('mnuSeguridad')) {
-            document.getElementById('mnuSeguridad').classList.add('menu-open');
-        }
-        if (document.getElementById('itemRole')) {
-            document.getElementById('itemRole').classList.add('active');
-        }
-    </script>
-
-    {{-- Incluimos el listener de notificaciones reutilizable --}}
-    @include('plantilla.partials.sweetalert-listener')
-
-    {{-- Script de tooltips --}}
-    <script>
-        function initTooltips() {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-                var existingTooltip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
-                if (existingTooltip) { existingTooltip.dispose(); }
-                new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-        }
-        document.addEventListener('livewire:init', () => {
-            initTooltips();
-            Livewire.hook('morph.updated', () => { initTooltips(); });
-        });
-    </script>
-@endpush

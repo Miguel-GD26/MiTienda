@@ -84,7 +84,16 @@
             <i class="fab fa-whatsapp fa-fw form-icon"></i>
             <input id="empresa_telefono_whatsapp" type="text" wire:model.live="empresa_telefono_whatsapp"
                 class="material-form-control-with-icon @error('empresa_telefono_whatsapp') is-invalid @enderror"
-                placeholder=" " maxlength="9" x-init="...">
+                placeholder=" " 
+                maxlength="9" x-init="
+                    $el.addEventListener('input', () => { $el.value = $el.value.replace(/\D/g, '') });
+                    $el.addEventListener('paste', (e) => {
+                        e.preventDefault();
+                        const text = (e.clipboardData || window.clipboardData).getData('text');
+                        $el.value = text.replace(/\D/g, '').slice(0, 9);
+                        $el.dispatchEvent(new Event('input'));
+                    });
+                ">
             <label for="empresa_telefono_whatsapp" class="material-form-label">WhatsApp <span
                     class="text-danger">*</span></label>
             @error('empresa_telefono_whatsapp') <div class="text-danger small mt-1">{{ $message }}</div> @enderror

@@ -16,41 +16,29 @@ class UserManagement extends Component
 {
     use WithPagination;
 
-    //--- ESTADO DEL COMPONENTE Y PROPIEDADES ---//
+    //--- PROPIEDADES PÚBLICAS ---
     public $search = '';
-    public $perPage = 10;
+    public $perPage = 10, $empresaPage;
     protected $paginationTheme = 'bootstrap';
 
-    //--- CONTROL DE MODALES ---//
     public $showModal = false;
     public $userId = null;
     public $isEditMode = false;
-    
-    //--- CAMPOS DEL FORMULARIO ---//
+
     public $name, $email, $password, $password_confirmation, $role, $empresa_id;
     public $activo;
     public $empresaOption = '';
     public $empresa_nombre, $empresa_rubro, $empresa_telefono_whatsapp;
 
-    //--- MODAL DE CONFIRMACIÓN ---//
     public $showConfirmModal = false;
     public $confirmModalType = 'delete';
     public $userToDeleteOrToggle;
-    
-    //--- GESTIÓN DE SUSCRIPCIÓN ---//
-    public $subscription_status = '';
-    public $current_subscription_status = '';
 
-    public $searchEmpresa = ''; // El texto que el usuario escribe para buscar
-    public $empresaSeleccionadaNombre = '';
+    public $subscription_status = '', $current_subscription_status = '';
+    public $searchEmpresa = '', $empresaSeleccionadaNombre = '';
 
-    
-
-
-    //--- LISTENERS ---//
     protected $listeners = ['userUpdated' => '$refresh'];
 
-    //--- REGLAS DE VALIDACIÓN ---//
     protected function rules()
     {
         $rules = [
@@ -65,74 +53,44 @@ class UserManagement extends Component
         }
 
         if (auth()->user()->hasRole('super_admin')) {
-            // Validación para el campo de selección de empresa.
-            $rules['empresaOption'] = [
-                Rule::requiredIf(
-                    !$this->isEditMode && 
-                    in_array($this->role, ['admin', 'vendedor', 'repartidor'])
-                )
-            ];
-
-            // Validación para los campos de "crear nueva empresa".
+            $rules['empresaOption'] = [Rule::requiredIf(!$this->isEditMode && in_array($this->role, ['admin', 'vendedor', 'repartidor']))];
             $rules['empresa_nombre'] = 'required_if:empresaOption,crear_nueva|string|max:255|unique:empresas,nombre';
-            $rules['empresa_rubro'] = 'required_if:empresaOption,crear_nueva|string|max:255';
-            $rules['empresa_telefono_whatsapp'] = 'required_if:empresaOption,crear_nueva|string|digits:9';
+            $rules['empresa_rubro'] = 'nullable|string|max:255';
+            $rules['empresa_telefono_whatsapp'] = 'nullable|string|digits:9';
         }
-        
+
         return $rules;
     }
-    
-    
 
+    // --- MÉTODOS DEL CICLO DE VIDA ---
+    public function updated($propertyName)
+    {
+        $this->validateOnly($propertyName);
+    }
     public function updatedSearch()
     {
-        // Resetea la paginación principal cuando se busca en la tabla.
         $this->resetPage();
     }
-
-    public function loadEmpresas()
+    public function updatedSearchEmpresa()
     {
-        $query = trim($this->searchEmpresa);
-        $perPage = 2;
-
-        // Ahora guardamos todo el objeto paginador en la propiedad pública
-        $this->empresaResults = Empresa::where('nombre', 'like', '%' . $query . '%')
-            ->latest()
-            ->paginate($perPage, ['*'], 'empresaPage');
+        $this->resetPage('empresaPage');
     }
 
-
-    // --- NUEVO MÉTODO PARA CARGAR LA SIGUIENTE PÁGINA ---
-    public function loadMoreEmpresas()
-    {
-        $this->empresaPage = 1; 
-        $this->loadEmpresas();
-    }
-
-    public function updatedEmpresaPage()
-    {
-        $this->loadEmpresas();
-    }
-    
+    // --- MÉTODOS DEL BUSCADOR DE EMPRESA ---
     public function selectEmpresa($empresaId, $empresaNombre)
     {
         $this->empresa_id = $empresaId;
         $this->empresaOption = $empresaId;
-        $this->empresaSeleccionadaNombre = $empresaNombre; // Guardamos el nombre
-        $this->searchEmpresa = '';
-        $this->resetPage('empresaPage'); 
+        $this->empresaSeleccionadaNombre = $empresaNombre;
     }
+
     public function cambiarEmpresa()
     {
         $this->reset(['empresa_id', 'empresaOption', 'empresaSeleccionadaNombre', 'searchEmpresa']);
         $this->resetPage('empresaPage');
     }
-    public function updated($propertyName)
-    {
-        $this->validateOnly($propertyName);
-    }
 
-    //--- GESTIÓN DEL MODAL DE EDICIÓN/CREACIÓN ---//
+    // --- MÉTODOS DEL MODAL Y CRUD ---
     public function openModal($userId = null)
     {
         $this->resetValidation();
@@ -184,13 +142,11 @@ class UserManagement extends Component
         $this->searchEmpresa = '';
         $this->empresaSeleccionadaNombre = '';
         $this->empresaPage = 1;
-        $this->empresaResults = null; 
     }
 
-    //--- ACCIONES CRUD (CREAR Y ACTUALIZAR) ---//
     public function saveUser()
     {
-        if(is_numeric($this->empresaOption)){
+        if (is_numeric($this->empresaOption)) {
             $this->empresa_id = $this->empresaOption;
         }
 
@@ -212,7 +168,7 @@ class UserManagement extends Component
                     ]);
                     $empresaId = $empresa->id;
                 }
-            } elseif(!auth()->user()->hasRole('super_admin')) {
+            } elseif (!auth()->user()->hasRole('super_admin')) {
                 $empresaId = auth()->user()->empresa_id;
             }
 
@@ -256,14 +212,13 @@ class UserManagement extends Component
             // --- FIN DEL CAMBIO --- //
 
             DB::commit();
-            
+
             $this->dispatch('alert', [
                 'type' => 'success',
                 'message' => 'Usuario ' . ($this->isEditMode ? 'actualizado' : 'creado') . ' correctamente.'
             ]);
 
             $this->closeModal();
-            
         } catch (\Exception $e) {
             DB::rollBack();
             $this->dispatch('alert', [
@@ -272,18 +227,13 @@ class UserManagement extends Component
             ]);
         }
     }
-    
-    //--- ACCIONES DE CONFIRMACIÓN (ELIMINAR Y CAMBIAR ESTADO) ---//
+
     public function openConfirmModal($type, $userId)
     {
         if ($type === 'delete' && auth()->id() == $userId) {
-             $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => 'No puedes eliminar tu propia cuenta de usuario.'
-            ]);
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'No puedes eliminar tu propia cuenta.']);
             return;
         }
-
         $this->userToDeleteOrToggle = User::findOrFail($userId);
         $this->confirmModalType = $type;
         $this->showConfirmModal = true;
@@ -297,135 +247,78 @@ class UserManagement extends Component
 
     public function confirmAction()
     {
-        if ($this->confirmModalType === 'delete') {
-            $this->deleteUser();
-        } elseif ($this->confirmModalType === 'toggle') {
-            $this->toggleStatus();
-        }
+        if ($this->confirmModalType === 'delete') $this->deleteUser();
+        elseif ($this->confirmModalType === 'toggle') $this->toggleStatus();
     }
 
     private function deleteUser()
     {
-        if ($this->userToDeleteOrToggle) {
-            $user = $this->userToDeleteOrToggle;
+        if (!$this->userToDeleteOrToggle) return;
+        $user = $this->userToDeleteOrToggle;
 
-            if (auth()->id() === $user->id) {
-                $this->dispatch('alert', ['type' => 'error', 'message' => 'No puedes eliminar tu propia cuenta de usuario.']);
-                $this->closeConfirmModal();
-                return;
-            }
-
-            if ($user->hasRole('super_admin')) {
-                if (User::role('super_admin')->count() <= 1) {
-                    $this->dispatch('alert', ['type' => 'error', 'message' => 'No se puede eliminar al último superadministrador del sistema.']);
-                    $this->closeConfirmModal();
-                    return;
-                }
-            }
-
-            if ($user->empresa && $user->hasRole('admin')) {
-                $otherAdminsCount = User::where('empresa_id', $user->empresa_id)
-                                        ->where('id', '!=', $user->id)
-                                        ->role('admin')->count();
-
-                if ($otherAdminsCount === 0) {
-                    $this->dispatch('alert', ['type' => 'warning', 'message' => 'No se puede eliminar al último administrador de la empresa.']);
-                    $this->closeConfirmModal();
-                    return; 
-                }
-            }
-
+        if (auth()->id() === $user->id) {
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'No puedes eliminar tu propia cuenta.']);
+        } elseif ($user->hasRole('super_admin') && User::role('super_admin')->count() <= 1) {
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'No se puede eliminar al último superadministrador.']);
+        } elseif ($user->empresa && $user->hasRole('admin') && User::where('empresa_id', $user->empresa_id)->role('admin')->count() <= 1) {
+            $this->dispatch('alert', ['type' => 'warning', 'message' => 'No se puede eliminar al último administrador.']);
+        } else {
             $user->delete();
             $this->dispatch('alert', ['type' => 'success', 'message' => 'Usuario eliminado correctamente.']);
-            $this->closeConfirmModal();
         }
+        $this->closeConfirmModal();
     }
 
     private function toggleStatus()
     {
-        if ($this->userToDeleteOrToggle) {
-            $user = $this->userToDeleteOrToggle;
-
-            if (auth()->id() === $user->id) {
-                $this->dispatch('alert', ['type' => 'error', 'message' => 'No puedes cambiar tu propio estado de actividad.']);
-                $this->closeConfirmModal();
-                return; 
-            }
-            
-            $user->activo = !$user->activo;
-            $user->save();
-
-            $message = $user->activo ? "El usuario {$user->name} ha sido activado." : "El usuario {$user->name} ha sido desactivado y no podrá iniciar sesión.";
-            $type = $user->activo ? 'success' : 'warning';
-
-            $this->dispatch('alert', ['type' => $type, 'message' => $message]);
+        if (!$this->userToDeleteOrToggle) return;
+        $user = $this->userToDeleteOrToggle;
+        if (auth()->id() === $user->id) {
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'No puedes cambiar tu propio estado.']);
             $this->closeConfirmModal();
+            return;
         }
+        $user->activo = !$user->activo;
+        $user->save();
+        $message = $user->activo ? "El usuario {$user->name} ha sido activado." : "El usuario {$user->name} ha sido desactivado.";
+        $this->dispatch('alert', ['type' => $user->activo ? 'success' : 'warning', 'message' => $message]);
+        $this->closeConfirmModal();
     }
 
-    public function buscarTodo()
-    {
-        $this->resultados = Empresa::all();
-    }
-
-    public function updatedSearchEmpresa($value)
-    {
-        $this->resultados = Empresa::where('nombre', 'like', "%{$value}%")->get();
-    }
-
-    
-    //--- MÉTODO DE RENDERIZACIÓN ---//
     public function render()
     {
-
         $empresaPaginator = null;
         if ($this->showModal && !$this->isEditMode && !$this->empresa_id) {
-            $queryRaw = $this->searchEmpresa; // sin trim
+            $queryRaw = $this->searchEmpresa;
             $query = trim($queryRaw);
-
             if ($queryRaw === ' ') {
-                // Si es exactamente un espacio: mostrar todas las empresas
-                $empresaPaginator = Empresa::latest()
-                    ->paginate(2, ['*'], 'empresaPage');
-            } elseif ($query !== '') {
-                // Si hay texto real: buscar por nombre
+                $empresaPaginator = Empresa::latest()->paginate(3, ['*'], 'empresaPage');
+            } elseif (!empty($query)) {
                 $empresaPaginator = Empresa::where('nombre', 'like', '%' . $query . '%')
                     ->latest()
-                    ->paginate(2, ['*'], 'empresaPage');
-            } else {
-                // Si está vacío y no es espacio: no mostrar nada
-                $empresaPaginator = null;
+                    ->paginate(3, ['*'], 'empresaPage');
             }
         }
 
-        $query = User::with('roles', 'empresa');
-
+        $userQuery = User::with('roles', 'empresa');
         if (!auth()->user()->hasRole('super_admin')) {
-            $query->where('empresa_id', auth()->user()->empresa_id);
+            $userQuery->where('empresa_id', auth()->user()->empresa_id);
+        }
+        if (trim($this->search)) {
+            $userQuery->where(fn($q) => $q->where('name', 'like', '%' . $this->search . '%')->orWhere('email', 'like', '%' . $this->search . '%'));
+        }
+        $registros = $userQuery->orderBy('id', 'asc')->paginate($this->perPage);
+
+        if ($registros->isEmpty() && trim($this->search)) {
+            $this->dispatch('alert', ['type' => 'info', 'message' => "No se encontraron usuarios para '{$this->search}'."]);
         }
 
-        $searchTerm = trim($this->search);
-        if (!empty($searchTerm)) {
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('email', 'like', '%' . $searchTerm . '%');
-            });
-        }
-        
-        $registros = $query->orderBy('id', 'asc')->paginate($this->perPage);
-        
-        if ($registros->isEmpty() && !empty($searchTerm)) {
-            $this->dispatch('alert', [
-                'type' => 'info',
-                'message' => "No se encontraron resultados para '{$searchTerm}'."
-            ]);
-        }
-        
-        $roles = Role::query()->when(!auth()->user()->hasRole('super_admin'), function ($q) {
-            $q->where('name', '!=', 'super_admin');
-        })->get();
-        
-        //dd($roles->pluck('name')); // Muestra solo los nombres de los roles
+        $roles = Role::query()
+            ->when(
+                !auth()->user()->hasRole('super_admin'),
+                fn($q) => $q->whereNotIn('name', ['super_admin', 'cliente'])
+            )->get();
+            
         $empresas = auth()->user()->hasRole('super_admin') ? Empresa::all() : collect();
 
         return view('livewire.user-management', [

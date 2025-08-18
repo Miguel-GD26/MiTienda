@@ -2,9 +2,6 @@
 @section('titulo', 'Sistema - Login')
 
 @section('contenido')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-@vite(['resources/css/login.css'])
-
 <video autoplay loop muted playsinline controlslist="nodownload" class="video-background d-none d-lg-block">
     <source src="{{ asset('assets/video/fondo.mp4') }}" type="video/mp4">
 </video>
@@ -19,6 +16,3 @@
 </div>
 @endsection
 
-@push('scripts')
-    @include('plantilla.partials.sweetalert-listener')
-@endpush

@@ -2,24 +2,28 @@
     <div class="container-fluid mt-4">
         {{-- SECCIÓN 1: CABECERA Y BÚSQUEDA --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="h3 mb-0">Listado de Usuarios</h2>
+            <h2 class="h3 mb-0 text-gray-800"><i class="fa-solid fa-users me-2"></i>Listado de Usuarios</h2>
             @can('user-create')
             <button wire:click="openModal()" class="btn btn-success shadow-sm">
                 <i class="fa-solid fa-user-plus me-1"></i> Nuevo Usuario
             </button>
             @endcan
         </div>
-
         {{-- Tarjeta de Contenido: Búsqueda y Tabla --}}
         <div class="card shadow-sm border-0">
             <div class="card-header bg-light">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input type="text" class="form-control" wire:model.live.debounce.300ms="search"
-                        placeholder="Buscar por nombre o email...">
-                    <span class="input-group-text" wire:loading wire:target="search">
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    </span>
+                <div class="material-form-group-with-icon">
+                    <i class="fas fa-search fa-fw form-icon"></i>
+                    <input id="searchProduct" type="text" wire:model.live.debounce.300ms="search"
+                        class="material-form-control-with-icon" placeholder=" "
+                        autocomplete="off" />
+                    <label for="searchProduct" class="material-form-label">Buscar por nombre o email...</label>
+
+                    <div class="spinner-container" wire:loading wire:target="search">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -186,12 +190,13 @@
                                     @error('name') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                                 </div>
                             </div>
+
                             <div class="col-md-6">
                                 <div class="material-form-group-with-icon mb-4">
                                     <i class="fas fa-envelope fa-fw form-icon"></i>
                                     <input id="email" type="email" wire:model.live="email"
                                         class="material-form-control-with-icon @error('email') is-invalid @enderror"
-                                        placeholder=" ">
+                                        placeholder=" " @if($isEditMode) disabled @endif>
                                     <label for="email" class="material-form-label">Correo Electrónico <span
                                             class="text-danger">*</span></label>
                                     @error('email') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
@@ -264,47 +269,32 @@
                                         title="Cambiar selección"><i class="fas fa-times"></i></button>
                                 </div>
                                 @else
-                                <div 
-                                    class="position-relative"
-                                    x-data="{ open: true }"
-                                    @click.away="open = false"
-                                    @focusin="open = true"
-                                >
+                                <div class="position-relative" x-data="{ open: true }" @click.away="open = false"
+                                    @focusin="open = true">
                                     <div class="material-form-group-with-icon mb-1">
                                         <i class="fas fa-search fa-fw form-icon"></i>
-                                        <input 
-                                            id="searchEmpresa" 
-                                            type="text" 
+                                        <input id="searchEmpresa" type="text"
                                             wire:model.live.debounce.300ms="searchEmpresa"
-                                            @keydown.space="
-                                                if ($wire.searchEmpresa.trim() === '') {
-                                                    $wire.call('buscarTodo');
-                                                }
-                                            "
                                             class="material-form-control-with-icon @error('empresa_id') is-invalid @enderror"
-                                            placeholder=" "
-                                            autocomplete="off"
-                                        />
-                                        <label for="searchEmpresa" class="material-form-label">Presiona Espacio para ver todas <span class="text-danger">*</span></label>
+                                            placeholder=" " autocomplete="off" />
+                                        <label for="searchEmpresa" class="material-form-label">Presiona Espacio para ver
+                                            todas <span class="text-danger">*</span></label>
                                     </div>
 
                                     {{-- La lista de resultados --}}
                                     @if($empresaPaginator && $empresaPaginator->total() > 0)
-                                    <div x-show="open" 
-                                        wire:key="empresa-dropdown-wrapper"
-                                        class="dropdown-menu d-block position-absolute w-100 shadow-lg" 
-                                        style="z-index: 1000;"
-                                        x-transition>
-                                        
-                                        <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                                    <div x-show="open" wire:key="empresa-dropdown-wrapper"
+                                        class="dropdown-menu d-block position-absolute w-100 shadow-lg"
+                                        style="z-index: 1000;" x-transition>
+
+                                        <div class="list-group list-group-flush"
+                                            style="max-height: 200px; overflow-y: auto;">
                                             @foreach($empresaPaginator as $empresa)
-                                                <a href="#"
-                                                wire:key="empresa-{{ $empresa->id }}"
-                                                @click="open = false" 
+                                            <a href="#" wire:key="empresa-{{ $empresa->id }}" @click="open = false"
                                                 wire:click.prevent="selectEmpresa({{ $empresa->id }}, '{{ addslashes($empresa->nombre) }}')"
                                                 class="list-group-item list-group-item-action">
-                                                    {{ $empresa->nombre }}
-                                                </a>
+                                                {{ $empresa->nombre }}
+                                            </a>
                                             @endforeach
                                         </div>
 
@@ -316,12 +306,14 @@
 
                                     </div>
                                     @elseif(strlen(trim($searchEmpresa)) > 0)
-                                        <div x-show="open" class="dropdown-menu d-block position-absolute w-100 shadow-lg p-2 text-muted">
-                                            No se encontraron resultados.
-                                        </div>
+                                    <div x-show="open"
+                                        class="dropdown-menu d-block position-absolute w-100 shadow-lg p-2 text-muted">
+                                        No se encontraron resultados.
+                                    </div>
                                     @endif
 
-                                    @error('empresa_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                    @error('empresa_id') <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <div class="text-center my-3"><small class="text-muted fw-bold">O</small></div>
@@ -336,7 +328,7 @@
                                 @elseif ($isEditMode && $empresa_id)
                                 <div class="material-form-group-with-icon mb-4">
                                     <i class="fas fa-building fa-fw form-icon"></i>
-                                    <input type="text" class="material-form-control-with-icon"
+                                    <input id="empresa_nombre" type="text" class="material-form-control-with-icon"
                                         value="{{ \App\Models\Empresa::find($empresa_id)?->nombre ?? 'Sin empresa' }}"
                                         disabled>
                                     <label for="empresa_nombre" class="material-form-label active">Empresa</label>
@@ -376,23 +368,18 @@
                         @endif
 
                         @if($isEditMode)
-                        <div class="mt-3" 
-                            x-data="{ localActivo: @entangle('activo') }" 
+                        <div class="mt-3" x-data="{ localActivo: @entangle('activo') }"
                             x-init="$watch('localActivo', value => $wire.set('activo', value))">
-                            
+
                             <label class="form-label d-block">Estado del Usuario</label>
-                            
+
                             <div class="form-check form-switch fs-5">
-                                <input class="form-check-input" 
-                                    type="checkbox" 
-                                    role="switch" 
-                                    id="activoSwitch"
-                                    x-model="localActivo"> {{-- Ahora controlado por Alpine --}}
-                                    
-                                <label class="form-check-label"
-                                    :class="localActivo ? 'text-success' : 'text-danger'" {{-- Clase dinámica de Alpine --}}
+                                <input class="form-check-input" type="checkbox" role="switch" id="activoSwitch"
+                                    x-model="localActivo">
+
+                                <label class="form-check-label" :class="localActivo ? 'text-success' : 'text-danger'"
                                     for="activoSwitch"
-                                    x-text="localActivo ? 'Activo' : 'Inactivo'"> {{-- Texto dinámico de Alpine --}}
+                                    x-text="localActivo ? 'Activo' : 'Inactivo'">
                                 </label>
                             </div>
                         </div>
@@ -435,14 +422,14 @@
                                             wire:model.live="empresa_telefono_whatsapp"
                                             class="material-form-control-with-icon @error('empresa_telefono_whatsapp') is-invalid @enderror"
                                             placeholder=" " maxlength="9" x-init="
-                                                $el.addEventListener('input', () => { $el.value = $el.value.replace(/\D/g, '') });
-                                                $el.addEventListener('paste', (e) => {
-                                                    e.preventDefault();
-                                                    const text = (e.clipboardData || window.clipboardData).getData('text');
-                                                    $el.value = text.replace(/\D/g, '').slice(0, 9);
-                                                    $el.dispatchEvent(new Event('input'));
-                                                });
-                                            ">
+                                            $el.addEventListener('input', () => { $el.value = $el.value.replace(/\D/g, '') });
+                                            $el.addEventListener('paste', (e) => {
+                                                e.preventDefault();
+                                                const text = (e.clipboardData || window.clipboardData).getData('text');
+                                                $el.value = text.replace(/\D/g, '').slice(0, 9);
+                                                $el.dispatchEvent(new Event('input'));
+                                            });
+                                        ">
                                         <label for="empresa_telefono_nueva" class="material-form-label">Teléfono /
                                             WhatsApp<span class="text-danger">*</span></label>
                                         @error('empresa_telefono_whatsapp')<span
@@ -468,7 +455,7 @@
             </div>
         </div>
     </div>
-    <div class="modal-backdrop fade show" style="display: @if($showModal) block @else none @endif;"></div>
+    <div class="modal-backdrop fade show {{ $showModal ? 'd-block' : 'd-none' }}"></div>
     @endif
 
     {{-- MODAL DE CONFIRMACIÓN --}}
@@ -502,6 +489,7 @@
             </div>
         </div>
     </div>
-    <div class="modal-backdrop fade show" style="display: @if($showConfirmModal) block @else none @endif;"></div>
+    <div class="modal-backdrop fade show {{ $showConfirmModal ? 'd-block' : 'd-none' }}"></div>
     @endif
 </div>
+
