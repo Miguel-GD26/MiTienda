@@ -10,8 +10,11 @@
         <div class="col">
             <div class="card product-card-intuitive h-100 shadow-sm">
                 <div class="card-img-container position-relative">
-                    <img src="{{ $producto->imagen_url ? cloudinary()->image($producto->imagen_url)->toUrl() : 'https://via.placeholder.com/400x300.png?text=Producto' }}"
-                        class="card-img-top" alt="Imagen de {{ $producto->nombre }}">
+                    {{-- El click ahora llama al método de Livewire --}}
+                    <a href="#" wire:click.prevent="openProductModal({{ $producto->id }})">
+                        <img src="{{ $producto->imagen_url ? cloudinary()->image($producto->imagen_url)->toUrl() : 'https://via.placeholder.com/400x300.png?text=Producto' }}"
+                            class="card-img-top" alt="Imagen de {{ $producto->nombre }}">
+                    </a>
                     @if ($availableStock <= 0) <div class="product-badge badge-outofstock">Agotado
                 </div>
                 @else
@@ -22,7 +25,26 @@
             @endif
         </div>
         <div class="card-body d-flex flex-column">
-            <h3 class="product-title">{{ $producto->nombre }}</h3>
+            <h3 class="product-title">
+                {{-- También aquí --}}
+                <a href="#" class="text-dark text-decoration-none"
+                    wire:click.prevent="openProductModal({{ $producto->id }})">
+                    {{ $producto->nombre }}
+                </a>
+            </h3>
+
+            {{-- Mostramos la descripción corta --}}
+            @if($producto->descripcion)
+            <p class="product-description text-muted small">
+                {{ Str::limit($producto->descripcion, 80) }}
+                @if(strlen($producto->descripcion) > 80)
+                {{-- Y el enlace "Ver más" que también abre el modal --}}
+                <a href="#" class="text-primary fw-bold" wire:click.prevent="openProductModal({{ $producto->id }})">Ver
+                    más</a>
+                @endif
+            </p>
+            @endif
+
             <div class="price-container">
                 @if ($producto->is_on_sale)
                 <span class="sale-price">S/. {{ number_format($producto->precio_oferta, 2) }}</span>
@@ -32,8 +54,7 @@
                 @endif
             </div>
             @if ($availableStock > 0 && $availableStock <= 5) <p class="stock-bajo-texto text-center">¡Solo quedan
-                <strong>{{ $availableStock }}</strong> en stock!</p>
-                @endif
+                <strong>{{ $availableStock }}</strong> en stock!</p>@endif
                 <div class="card-actions mt-auto">
                     @if ($quantityInCart == 0 && $producto->stock <= 0) <button type="button"
                         class="btn btn-agotado w-100 fw-bold" disabled><i class="fa-solid fa-ban me-1"></i>
@@ -108,5 +129,46 @@
 <div class="d-flex justify-content-center mt-5">
     {{ $productos->links() }}
 </div>
+@endif
+
+
+@if($showProductModal && $selectedProduct)
+<div class="modal fade show" style="display: block;" tabindex="-1" @keydown.escape.window="$wire.closeProductModal()">
+
+    {{-- ¡AQUÍ ESTÁ LA CORRECCIÓN! Añadimos 'modal-dialog-scrollable' --}}
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ $selectedProduct->nombre }}</h5>
+                <button type="button" class="btn-close" wire:click="closeProductModal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-5 mb-3 mb-md-0">
+                        <img src="{{ $selectedProduct->imagen_url ? cloudinary()->image($selectedProduct->imagen_url)->toUrl() : 'https://via.placeholder.com/400x300.png?text=Producto' }}"
+                            class="img-fluid rounded" alt="Imagen de {{ $selectedProduct->nombre }}">
+                    </div>
+                    <div class="col-md-7">
+                        <h3 class="fw-bold">{{ $selectedProduct->nombre }}</h3>
+                        <div class="price-container fs-4 mb-3">
+                            @if ($selectedProduct->is_on_sale)
+                            <span class='sale-price'>S/. {{ number_format($selectedProduct->precio_oferta, 2) }}</span>
+                            <del class='original-price'>S/. {{ number_format($selectedProduct->precio, 2) }}</del>
+                            @else
+                            <span class='sale-price'>S/. {{ number_format($selectedProduct->precio, 2) }}</span>
+                            @endif
+                        </div>
+                        <h6 class="text-muted border-top pt-3 mt-3">Descripción:</h6>
+                        <p style="white-space: pre-wrap;">
+                            {{ preg_replace('/^/m', '- ', $selectedProduct->descripcion ?: 'Este producto no tiene una descripción detallada.') }}
+                        </p>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade show"></div>
 @endif
 </div>

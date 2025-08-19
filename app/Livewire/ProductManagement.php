@@ -53,10 +53,10 @@ class ProductManagement extends Component
             'stock' => 'required|integer|min:0',
             'descripcion' => 'nullable|string',
             'categoria_id' => ['required', Rule::exists('categorias', 'id')->where('empresa_id', $empresaId)],
-            'new_imagen_url' => 'nullable|image|max:2048',
+            'new_imagen_url' => 'nullable|image|max:10240', // 10 MB
             'empresa_id' => [
                 Rule::requiredIf(fn() => !$this->isEditMode && $user->hasRole('super_admin')),
-                'nullable',
+                'nullable', 
                 'exists:empresas,id'
             ],
         ];
@@ -260,7 +260,20 @@ class ProductManagement extends Component
             ];
 
             if ($this->new_imagen_url) {
-                $uploadedFile = cloudinary()->uploadApi()->upload($this->new_imagen_url->getRealPath(), ['folder' => 'productos']);
+                $uploadedFile = cloudinary()->uploadApi()->upload(
+    $this->new_imagen_url->getRealPath(),
+    [
+        'folder' => 'productos',
+        'transformation' => [
+    'width' => 400,
+    'height' => 300,
+    'crop' => 'pad',
+    'background' => 'auto', // relleno neutro
+    'quality' => 'auto',
+    'fetch_format' => 'auto'
+]
+    ]
+);
                 $productData['imagen_url'] = $uploadedFile['public_id'];
 
                 if ($this->isEditMode && $this->imagen_url) {

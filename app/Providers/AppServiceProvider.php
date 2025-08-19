@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use App\Http\Middleware\CheckTrialStatus;
-use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {

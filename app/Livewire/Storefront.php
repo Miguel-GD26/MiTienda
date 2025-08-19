@@ -22,6 +22,11 @@ class Storefront extends Component
     public $categoriaSearch = '';
     public $selectedCategoriaName = '';
 
+    // --- PROPIEDADES PARA EL MODAL DE DETALLE DE PRODUCTO ---
+    public $showProductModal = false;
+    public ?Producto $selectedProduct = null;
+
+
     // Sincroniza las propiedades con la URL
     protected $queryString = [
         'search' => ['except' => ''],
@@ -63,6 +68,22 @@ class Storefront extends Component
     {
         $this->categoriaSearch = ' ';
         $this->resetPage('categoriaFilterPage');
+    }
+
+    // --- MÉTODOS PARA EL MODAL DE DETALLE DE PRODUCTO ---
+    public function openProductModal($productId)
+    {
+        // Cargamos solo los datos necesarios para evitar objetos pesados
+        $this->selectedProduct = Producto::find($productId);
+        if ($this->selectedProduct) {
+            $this->showProductModal = true;
+        }
+    }
+
+    public function closeProductModal()
+    {
+        $this->showProductModal = false;
+        $this->selectedProduct = null;
     }
 
     public function render()

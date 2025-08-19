@@ -12,10 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        
-        // --- INICIO DE LAS MODIFICACIONES ---
 
-        // 1. Configurar los proxies de confianza (SINTAXIS CORREGIDA)
+        // 1. Configurar los proxies de confianza 
         // Pasamos los parámetros posicionalmente en lugar de por nombre.
         $middleware->trustProxies(
             '*', // 1er Parámetro: los proxies
@@ -23,15 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
             Request::HEADER_X_FORWARDED_HOST |
             Request::HEADER_X_FORWARDED_PORT |
             Request::HEADER_X_FORWARDED_PROTO |
-            Request::HEADER_X_FORWARDED_AWS_ELB // 2do Parámetro: las cabeceras
+            Request::HEADER_X_FORWARDED_AWS_ELB 
         );
 
         // 2. Añadir tu middleware personalizado (se mantiene igual)
         $middleware->web(append: [
             \App\Http\Middleware\CheckTrialStatus::class,
         ]);
-
-        // --- FIN DE LAS MODIFICACIONES ---
 
     })
     ->withExceptions(function (Exceptions $exceptions) {

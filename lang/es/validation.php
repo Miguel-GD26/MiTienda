@@ -48,4 +48,8 @@ return [
             'required' => 'Debes seleccionar una empresa.',
         ],
     ],
+    'image' => 'El archivo debe ser una imagen válida.',
+    'max'   => [
+        'file' => 'El archivo no puede superar los :max KB.',
+    ],
 ];
