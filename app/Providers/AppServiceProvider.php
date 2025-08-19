@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use App\Http\Middleware\CheckTrialStatus;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Livewire::setUpdateRoute(function ($handle) {
+            return \Illuminate\Support\Facades\Route::post('/livewire/update', $handle)
+                ->middleware('web'); // ¡CRUCIAL! Asegura que la sesión esté disponible
+        });
         App::booted(function () {
             app('router')->pushMiddlewareToGroup('web', CheckTrialStatus::class);
         });
