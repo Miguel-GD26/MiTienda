@@ -53,7 +53,7 @@ class ProductManagement extends Component
             'stock' => 'required|integer|min:0',
             'descripcion' => 'nullable|string',
             'categoria_id' => ['required', Rule::exists('categorias', 'id')->where('empresa_id', $empresaId)],
-            'new_imagen_url' => 'nullable|image|max:2048',
+            'new_imagen_url' => 'nullable', 'file','mimes:jpeg,png,jpg,gif,webp','max:2048',
             'empresa_id' => [
                 Rule::requiredIf(fn() => !$this->isEditMode && $user->hasRole('super_admin')),
                 'nullable',
