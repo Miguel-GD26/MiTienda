@@ -159,10 +159,8 @@
                             @endif
                         </div>
                         <h6 class="text-muted border-top pt-3 mt-3">Descripción:</h6>
-                        <p style="white-space: pre-wrap;">
-                            {{ preg_replace('/^/m', '- ', $selectedProduct->descripcion ?: 'Este producto no tiene una descripción detallada.') }}
-                        </p>
-
+                        <p style="white-space: pre-wrap;">{{ preg_replace('/^/m', '- ', $selectedProduct->descripcion ?:
+                             'Este producto no tiene una descripción detallada.') }}</p>
                     </div>
                 </div>
             </div>
