@@ -23,10 +23,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Livewire::setUpdateRoute(function ($handle) {
-            return \Illuminate\Support\Facades\Route::post('/livewire/update', $handle)
-                ->middleware('web'); // ¡CRUCIAL! Asegura que la sesión esté disponible
-        });
+
         App::booted(function () {
             app('router')->pushMiddlewareToGroup('web', CheckTrialStatus::class);
         });

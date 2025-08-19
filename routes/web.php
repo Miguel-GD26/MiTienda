@@ -23,7 +23,7 @@ use App\Http\Controllers\Auth\SocialiteController;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\WelcomeController;
 use App\Livewire\Auth\PasswordReset\ResetForm;
-use Livewire\Livewire;
+use Livewire\Features\SupportFileUploads\FileUploadController;
 
 // --- Importaciones de Middleware y Modelos ---
 use App\Http\Middleware\RedirectAdminsFromWelcome;
@@ -173,8 +173,8 @@ Route::middleware('web')->group(function () {
         Route::get('/', [ProductoController::class, 'mostrarTienda'])->name('tienda.public.index');
     });
 
-    Route::post('/livewire/upload-file', [Livewire\Features\SupportFileUploads\FileUploadController::class, 'handle'])
-        ->name('livewire.upload-file');
+    Route::post('/livewire/upload-file', [FileUploadController::class, 'handle'])
+    ->name('livewire.upload-file');
     
 
 });
