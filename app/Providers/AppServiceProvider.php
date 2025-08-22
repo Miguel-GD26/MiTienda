@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use App\Http\Middleware\CheckTrialStatus;
+use App\Models\Empresa;
+use Illuminate\Support\Facades\Route;
+use App\Models\Pedido;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,38 +40,87 @@ class AppServiceProvider extends ServiceProvider
 
         Paginator::useBootstrap();
 
-        // View Composer ahora es más simple y eficiente
-        View::composer('welcome.navbar', function ($view) {
-            
-            // Inicializamos las variables que SÍ necesitamos
-            $returnUrl = session('url.store_before_login');
-            $misTiendas = collect(); 
-            
+
+        $storeRouteName = 'tienda.public.index';
+
+        View::composer('welcome.navbar', function ($view) use ($storeRouteName) {
+
+            // --- TODA LA LÓGICA DE DETECCIÓN DE 'activeStore' SE QUEDA IGUAL ---
             $user = Auth::user();
-
-            // La lógica para $misTiendas y $returnUrl se mantiene
-            if ($user && $user->hasRole('cliente')) {
-                // Esta consulta es solo si el usuario es un cliente
-                if ($user->cliente) {
-                    $misTiendas = $user->cliente->empresas()->orderBy('nombre')->get();
+            $misTiendas = collect();
+            $activeStore = null;
+            // ... (código para encontrar $activeStore que ya funciona) ...
+            $currentRoute = Route::current();
+            if ($currentRoute) {
+                foreach ($currentRoute->parameters() as $param) {
+                    if ($param instanceof Empresa) { $activeStore = $param; break; }
+                    if ($param instanceof Pedido) { $activeStore = $param->empresa; break; }
                 }
-
-                // Intentamos obtener la URL de la tienda desde el carrito,
-                // pero ya no necesitamos contar los ítems aquí.
-                $cart = $user->cart()->with('items.producto.empresa')->first();
-                if ($cart && $cart->items->isNotEmpty()) {
-                    $firstItem = $cart->items->first();
-                    if ($firstItem && $firstItem->producto) { // Verificación extra
-                        $returnUrl = route('tienda.public.index', $firstItem->producto->empresa->slug);
-                    }
+            }
+            if (!$activeStore) {
+                $slug = request()->segment(1);
+                if ($slug && !in_array($slug, ['carrito', 'login', 'register', 'dashboard', 'pedido-exitoso'])) {
+                    $activeStore = Empresa::where('slug', $slug)->first();
                 }
             }
             
-            // Pasamos solo las variables que la vista de navbar aún necesita.
-            // $cartItemCount ya no se pasa desde aquí.
-            $view->with('returnUrl', $returnUrl)
-                 ->with('misTiendas', $misTiendas);
+            // Detección 3: A través de la Sesión
+            if (!$activeStore && session()->has('last_visited_store_slug')) {
+                $activeStore = Empresa::where('slug', session('last_visited_store_slug'))->first();
+            }
+
+            // Detección 4: A través del Carrito
+            if (!$activeStore && $user && $user->hasRole('cliente')) {
+                $cart = $user->cart()->with('items.producto.empresa')->first();
+                if ($cart && $cart->items->isNotEmpty()) {
+                    $activeStore = $cart->items->first()?->producto?->empresa;
+                }
+            }
+
+            // --- INICIO DE LA NUEVA LÍNEA CLAVE ---
+            // Si después de toda la lógica encontramos una tienda, la guardamos en la sesión
+            // para que esté disponible en la siguiente página (ej. al ir al carrito).
+            if ($activeStore) {
+                session(['last_visited_store_slug' => $activeStore->slug]);
+            }
+
+            // --- DEFINICIÓN DE VARIABLES PARA LA VISTA (AQUÍ HACEMOS EL CAMBIO) ---
+            $activeStoreName = "";
+            $logoPath = asset('assets/img/MiTienda2.png');
+            $returnUrl = route('welcome');
+
+            // Definimos las URLs base para los enlaces
+            $soporteUrl = route('soporte'); // URL por defecto
+            $acercaUrl = route('acerca');   // URL por defecto
+
+            if ($activeStore) {
+                // -- SI ESTAMOS EN EL CONTEXTO DE UNA TIENDA --
+                $activeStoreName = $activeStore?->nombre;
+                $returnUrl = route($storeRouteName, $activeStore->slug);
+                if ($activeStore->logo_url) {
+                    $logoPath = cloudinary()->image($activeStore->logo_url)->toUrl();
+                }
+
+                // Reconstruimos las URLs para que incluyan el slug de la tienda
+                $soporteUrl = url($activeStore->slug . '/soporte');
+                $acercaUrl = url($activeStore->slug . '/acerca');
+            } else if ($user && $user->empresa && $user->empresa->logo_url) {
+                $logoPath = cloudinary()->image($user->empresa->logo_url)->toUrl();
+            }
+
+            if ($user && $user->hasRole('cliente') && $user->cliente) {
+                $misTiendas = $user->cliente->empresas()->orderBy('nombre')->get();
+            }
+
+            // Pasamos las nuevas variables a la vista
+            $view->with([
+                'returnUrl' => $returnUrl,
+                'misTiendas' => $misTiendas,
+                'logoPath' => $logoPath,
+                'soporteUrl' => $soporteUrl, // <-- Nueva variable
+                'acercaUrl' => $acercaUrl,   // <-- Nueva variable
+                'activeStoreName' => $activeStoreName,
+            ]);
         });
     }
-
 }

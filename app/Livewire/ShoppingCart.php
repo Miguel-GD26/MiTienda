@@ -65,7 +65,7 @@ class ShoppingCart extends Component
 
             if ($newQuantity > $stockMaximo) {
                 $this->dispatch('alert', ['type' => 'error', 'message' => "Stock insuficiente. Solo quedan {$stockMaximo} unidades."]);
-                
+
                 $itemEnColeccion = $this->cartItems->find($itemId);
                 if ($itemEnColeccion) {
                     $itemEnColeccion->cantidad = $stockMaximo;
@@ -76,7 +76,6 @@ class ShoppingCart extends Component
             $item->update(['cantidad' => $newQuantity]);
             $this->mount();
             $this->dispatch('cartUpdated');
-
         } catch (Exception $e) {
             Log::error('Error al actualizar la cantidad: ' . $e->getMessage());
             $this->dispatch('alert', ['type' => 'error', 'message' => 'No se pudo actualizar el producto.']);
@@ -132,26 +131,35 @@ class ShoppingCart extends Component
         }
     }
 
+    // app/Livewire/ShoppingCart.php
+
+    // ... (resto de tu componente)
+
     public function checkout()
     {
         $user = Auth::user();
         $cart = $user->cart()->with('items.producto')->first();
-        
+
         if (!$cart || $cart->items->isEmpty()) {
             return redirect()->route('welcome')->with('error', 'Tu carrito está vacío.');
         }
 
         try {
             $pedido = DB::transaction(function () use ($cart, $user) {
-                // ... (La lógica de tu DB::transaction es perfecta y se copia aquí tal cual)
-                if (!$cliente = $user->cliente) throw new Exception('Perfil de cliente no encontrado.');
-                
+
+                if (!$cliente = $user->cliente) {
+                    throw new Exception('Perfil de cliente no encontrado.');
+                }
+
                 $empresa = $cart->items->first()->producto->empresa;
                 $total = $cart->items->sum(fn($item) => optional($item->producto)->precio_final * $item->cantidad);
 
                 $nuevoPedido = Pedido::create([
-                    'cliente_id' => $cliente->id, 'empresa_id' => $empresa->id, 'total' => $total,
-                    'estado' => 'pendiente', 'notas' => $this->notas
+                    'cliente_id' => $cliente->id,
+                    'empresa_id' => $empresa->id,
+                    'total' => $total,
+                    'estado' => 'pendiente',
+                    'notas' => $this->notas
                 ]);
 
                 foreach ($cart->items as $item) {
@@ -161,11 +169,17 @@ class ShoppingCart extends Component
                     }
                     $precioPagado = $producto->precio_final;
                     $nuevoPedido->detalles()->create([
-                        'producto_id' => $item->producto_id, 'cantidad' => $item->cantidad,
-                        'precio_unitario' => $precioPagado, 'subtotal' => $precioPagado * $item->cantidad,
+                        'producto_id' => $item->producto_id,
+                        'cantidad' => $item->cantidad,
+                        'precio_unitario' => $precioPagado,
+                        'subtotal' => $precioPagado * $item->cantidad,
                     ]);
                     $producto->decrement('stock', $item->cantidad);
                 }
+
+                // <<< ¡NUEVA LÍNEA! AQUÍ ESTÁ LA MAGIA! >>>
+                // Una vez confirmado el pedido, asociamos al cliente con la empresa si no lo estaba ya.
+                $cliente->empresas()->syncWithoutDetaching($empresa->id);
 
                 $cart->items()->delete();
                 $this->dispatch('cartUpdated');
@@ -173,12 +187,14 @@ class ShoppingCart extends Component
             });
 
             return redirect()->route('pedido.success', $pedido->id)->with('mensaje', '¡Tu pedido ha sido realizado con éxito!');
-
         } catch (Exception $e) {
             Log::error('Error en checkout para usuario ' . $user->id . ': ' . $e->getMessage());
             $this->dispatch('alert', ['type' => 'error', 'message' => 'Hubo un error al procesar tu pedido: ' . $e->getMessage()]);
+            // Es importante no retornar nada aquí para que el usuario se quede en la página del carrito y vea el error.
         }
     }
+
+    // ... (resto de tu componente)
 
     public function render()
     {

@@ -141,9 +141,6 @@
 
 @section('contenido')
 <div class="container-contenido">
-
-    {{-- Simplemente llamamos al componente Livewire del carrito --}}
     @livewire('shopping-cart')
-
 </div>
 @endsection

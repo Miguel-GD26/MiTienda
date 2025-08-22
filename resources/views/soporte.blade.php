@@ -51,7 +51,17 @@
         <h1 class="display-5 fw-bold">Estamos aquí para ayudarte</h1>
         <p class="lead col-lg-8 mx-auto nacimos-texto">Encuentra respuestas rápidas en nuestra sección de preguntas frecuentes o contáctanos directamente si necesitas asistencia con la plataforma.</p>
     </div>
-
+    @if(isset($tienda) && $tienda)
+<div class="card shadow-sm border-0 mb-5 bg-light-subtle">
+    <div class="card-body p-4 text-center">
+        <h2 class="h4 mb-3">Soporte Directo de la Tienda <span class="text-primary">{{ $tienda->nombre }}</span></h2>
+        <p class="text-muted">Si tu consulta es sobre un producto específico, tu pedido, el pago o la entrega, te recomendamos contactar directamente con la tienda.</p>
+        <a href="https://wa.me/{{ $tienda->telefono_whatsapp }}" target="_blank" class="btn btn-success btn-lg">
+            <i class="fab fa-whatsapp me-2"></i>Contactar a {{ $tienda->nombre }} por WhatsApp
+        </a>
+    </div>
+</div>
+@endif
     {{-- 2. PASO 1: Segmentación del Usuario (El "Filtro" de Soporte) --}}
     <div class="card shadow-sm border-0 mb-5">
         <div class="card-body p-4 text-center">

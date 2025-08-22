@@ -1,5 +1,5 @@
 <div id="product-list-wrapper">
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4" id="product-grid-container">
+    <div class="animated-element row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4" id="product-grid-container" style="animation-delay: 0.2s;">
         @forelse ($productos as $producto)
         @php
         $cartItem = $cartItems->get($producto->id);

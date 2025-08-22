@@ -2,11 +2,12 @@
 
     {{-- Encabezado de la página --}}
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        
         <h1 class="mb-0 fw-bold">Mi Carrito</h1>
         @if($returnUrl)
         <a href="{{ $returnUrl }}" class="btn btn-accion-principal">
-    <i class="fa-solid fa-arrow-left me-1"></i> Seguir Comprando
-</a>
+            <i class="fa-solid fa-arrow-left me-1"></i> Seguir Comprando
+        </a>
         @endif
     </div>
 
