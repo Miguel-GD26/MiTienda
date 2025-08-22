@@ -8,7 +8,7 @@
         @endphp
 
         <div class="col">
-            <div class="card product-card-intuitive h-100 shadow-sm">
+            <div class="card product-card-intuitive h-100 shadow-sm position-relative">
                 <div class="card-img-container position-relative">
                     {{-- El click ahora llama al método de Livewire --}}
                     <a href="#" wire:click.prevent="openProductModal({{ $producto->id }})">
@@ -18,9 +18,8 @@
                     @if ($availableStock <= 0) <div class="product-badge badge-outofstock">Agotado
                 </div>
                 @else
-                @if ($producto->is_on_sale)<div class="product-badge badge-sale">Oferta</div>@endif
-                @if ($availableStock <= 5)<div class="product-badge badge-lowstock"
-                    style="top: 55px; background-color: #E67E22;">¡Últimas unidades!
+                @if ($producto->is_on_sale)<div class="product-badge badge-sales">Oferta</div>@endif
+                @if ($availableStock <= 5)<div class="product-badge badge-lowstocks">¡Últimas unidades!
             </div>@endif
             @endif
         </div>
@@ -126,10 +125,12 @@
 @endforelse
 </div>
 @if ($productos->hasPages())
-<div class="d-flex justify-content-center mt-5">
+<div class="mt-5 pagination-container">
     {{ $productos->links() }}
 </div>
 @endif
+
+
 
 
 @if($showProductModal && $selectedProduct)

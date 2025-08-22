@@ -17,13 +17,13 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
             {{-- Mostramos el texto "Mostrando X a Y de Z resultados" --}}
             <div class="d-none d-sm-block">
                 <p class="small text-muted mb-0">
-                    {!! __('Showing') !!}
+                    {{ __('pagination.showing') }}
                     <span class="fw-semibold">{{ $paginator->firstItem() }}</span>
-                    {!! __('to') !!}
+                    {{ __('pagination.to') }}
                     <span class="fw-semibold">{{ $paginator->lastItem() }}</span>
-                    {!! __('of') !!}
+                    {{ __('pagination.of') }}
                     <span class="fw-semibold">{{ $paginator->total() }}</span>
-                    {!! __('results') !!}
+                    {{ __('pagination.results') }}
                 </p>
             </div>
 
