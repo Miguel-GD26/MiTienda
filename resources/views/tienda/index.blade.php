@@ -354,13 +354,16 @@
 
 /* --- PAGINACIÓN --- */
 .pagination-container {
-    display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     background: linear-gradient(135deg, #11998e, #38ef7d);
     padding: 1rem;
     border-radius: 10px;
+}
+
+.pagination-container .d-none.d-sm-block p {
+    color: #fff !important;
 }
 
 .pagination-container button,
@@ -409,9 +412,7 @@
     opacity: 0;
 }
 
-/* ========================================
-   RESPONSIVE DESIGN
-   ======================================== */
+/* RESPONSIVE DESIGN */
 
 /* Móviles */
 @media (max-width: 576px) {
@@ -467,6 +468,7 @@
         font-size: 1.8rem;
     }
 }
+
 </style>
 @endpush
 

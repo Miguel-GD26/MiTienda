@@ -32,6 +32,7 @@ use App\Http\Middleware\CheckTrialStatus;
 use App\Models\Pedido;
 use App\Http\Livewire\Storefront;
 use App\Models\Empresa;
+use App\Livewire\Order\SuccessPage;
 
 Route::middleware('web')->group(function () {
 
@@ -117,48 +118,11 @@ Route::middleware('web')->group(function () {
 
         // --- CARRITO DE COMPRAS Y PEDIDOS (Para Clientes) ---
         Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');
-        // Route::post('/carrito/agregar/{producto}', [CartController::class, 'add'])->name('cart.add');
-        // Route::post('/carrito/actualizar', [CartController::class, 'update'])->name('cart.update');
-        // Route::post('/carrito/remover', [CartController::class, 'remove'])->name('cart.remove');
-        // Route::post('/carrito/limpiar', [CartController::class, 'clear'])->name('cart.clear');
-        // Route::post('/pedido/procesar', [CartController::class, 'checkout'])->name('cart.checkout');
-        // Route::post('/pedidos/{pedido}/cancelar-cliente', [PedidoController::class, 'cancelarPorCliente'])->name('pedidos.cliente.cancelar');
-
-        Route::get('/pedido-exitoso/{pedido}', function (Pedido $pedido) {
-            if (auth()->id() !== $pedido->cliente->user_id) abort(403);
-
-            $pedido->load('detalles.producto', 'empresa', 'cliente');
-
-            // --- CONSTRUIMOS UNA ÚNICA VERSIÓN DEL TEXTO ---
-            $resumenWeb = "*¡Nuevo Pedido!* 🛍️\n\n" .
-                "*Referencia:* #" . $pedido->id . "\n" .
-                "*Cliente:* " . $pedido->cliente->nombre . "\n" .
-                "*Fecha:* " . $pedido->created_at->format('d/m/Y') . "\n" .
-                "-----------------------------------\n" .
-                "*DETALLE:*\n";
-
-            foreach ($pedido->detalles as $detalle) {
-                $resumenWeb .= "- {$detalle->cantidad}x {$detalle->producto->nombre} = S/." . number_format($detalle->subtotal, 2) . "\n";
-            }
-
-            $resumenWeb .= "-----------------------------------\n" .
-                "*TOTAL: S/." . number_format($pedido->total, 2) . "*";
-
-            if ($pedido->notas) {
-                $resumenWeb .= "\n\n*Notas:* " . $pedido->notas;
-            }
-
-            // Pasamos solo 'pedido' y 'resumenWeb'
-            return view('tienda.success', compact('pedido', 'resumenWeb'));
-        })->name('pedido.success');
+        Route::get('/pedido-exitoso/{pedido}', [PedidoController::class, 'showSuccessPage'])->name('pedido.success');
+        
 
 
         // Gestión de Pedidos (Admins)
-        // Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
-        // Route::get('/pedidos/{pedido}', [PedidoController::class, 'show'])->name('pedidos.show');
-        // Route::post('/pedidos/{pedido}/actualizar-estado', [PedidoController::class, 'update'])->name('pedidos.updateStatus');
-        // Route::delete('/pedidos/{pedido}', [PedidoController::class, 'destroy'])->name('pedidos.destroy');
-
         Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
         Route::get('/pedidos/{pedido}', [PedidoController::class, 'show'])->name('pedidos.show');
 
@@ -183,9 +147,6 @@ Route::middleware('web')->group(function () {
     Route::middleware([RememberStoreUrl::class])
         ->prefix('{empresa:slug}')
         ->group(function () {
-            // Route::get('/', [ProductoController::class, 'mostrarTienda'])->name('tienda.public.index');
-            // Route::get('/categoria/{categoria}', [ProductoController::class, 'filtrarPorCategoria'])->name('tienda.public.categoria');
-            // Route::get('/buscar-productos', [ProductoController::class, 'buscarPublicoAjax'])->name('tienda.productos.buscar_ajax');
             Route::get('/', [ProductoController::class, 'mostrarTienda'])->name('tienda.public.index');
         });
 

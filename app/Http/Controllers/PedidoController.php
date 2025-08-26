@@ -40,6 +40,15 @@ class PedidoController extends Controller
         return view('pedido.detalleAdmin', compact('pedido'));
     }
 
+    public function showSuccessPage(Pedido $pedido)
+    {
+        // Autorización
+        if (auth()->id() !== $pedido->cliente->user_id) {
+            abort(403);
+        }
+        return view('tienda.success', compact('pedido'));
+    }
+
     // public function index(Request $request)
     // {   
     //     $this->authorize('pedido-list');

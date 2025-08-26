@@ -13,6 +13,7 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "chillerlan/php-qrcode": "^5.0",
         "cloudinary-labs/cloudinary-laravel": "^3.0",
+        "intervention/image": "^3.11",
         "laravel/framework": "^12.0",
         "laravel/socialite": "^5.21",
         "laravel/tinker": "^2.10.1",
