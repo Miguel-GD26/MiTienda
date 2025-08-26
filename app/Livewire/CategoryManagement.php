@@ -137,14 +137,14 @@ class CategoryManagement extends Component
 
     public function saveCategory()
     {
-        if (!Auth::user()->hasRole('super_admin')) {
-            $this->empresa_id = Auth::user()->empresa_id;
-        }
-
         $categoryInstance = $this->isEditMode ? Categoria::find($this->categoryId) : null;
         $this->authorize($this->isEditMode ? 'categoria-edit' : 'categoria-create', $categoryInstance ?? Categoria::class);
 
         $validatedData = $this->validate();
+
+        if (!Auth::user()->hasRole('super_admin')) {
+            $validatedData['empresa_id'] = Auth::user()->empresa_id;
+        }
 
         try {
             Categoria::updateOrCreate(['id' => $this->categoryId], $validatedData);
