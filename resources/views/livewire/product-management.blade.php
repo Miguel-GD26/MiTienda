@@ -60,10 +60,10 @@
                             @endif
                         </div>
                         @elseif(strlen(trim($empresaSearch)) > 0)
-                            <div x-show="open"
-                                class="dropdown-menu d-block position-absolute w-100 shadow-lg p-2 text-muted">
-                                No se encontraron resultados.
-                            </div>     
+                        <div x-show="open"
+                            class="dropdown-menu d-block position-absolute w-100 shadow-lg p-2 text-muted">
+                            No se encontraron resultados.
+                        </div>
                         @endif
                         @endif
                     </div>
@@ -122,10 +122,10 @@
                         </div>
 
                         @elseif(strlen(trim($categoriaSearch)) > 0)
-                            <div x-show="open"
-                                class="dropdown-menu d-block position-absolute w-100 shadow-lg p-2 text-muted">
-                                No se encontraron resultados.
-                            </div>     
+                        <div x-show="open"
+                            class="dropdown-menu d-block position-absolute w-100 shadow-lg p-2 text-muted">
+                            No se encontraron resultados.
+                        </div>
                         @endif
                         @endif
                     </div>
@@ -170,8 +170,7 @@
                                     @if ($producto->imagen_url)
                                     <img src="{{cloudinary()->image($producto->imagen_url)->toUrl()}}"
                                         alt="{{ $producto->nombre }}" class="img-thumbnail"
-                                        style="width: 50px; height: 50px; object-fit: cover;"
-                                        >
+                                        style="width: 50px; height: 50px; object-fit: cover;">
                                     @else
                                     <div class="icon-circle bg-secondary-subtle text-secondary mx-auto"><i
                                             class="fa-solid fa-image"></i></div>
@@ -193,8 +192,29 @@
                                         <span class="fw-bold">S/.{{ number_format($producto->precio, 2) }}</span>
                                         @endif
                                 </td>
-                                <td class="text-center"><span
-                                        class="badge rounded-pill {{ $producto->stock <= 0 ? 'text-bg-danger' : ($producto->stock < 10 ? 'text-bg-warning' : 'text-bg-success') }}">{{ $producto->stock <= 0 ? 'Agotado' : $producto->stock }}</span>
+                                <td class="text-center">
+                                    @if($producto->stock <= 0) {{-- Estado 1: Agotado --}} <span
+                                        class="badge rounded-pill text-bg-danger" data-bs-toggle="tooltip"
+                                        title="Producto sin stock">
+                                        Agotado
+                                        </span>
+
+                                        @elseif($producto->is_low_stock)
+                                        {{-- Estado 2: Stock Bajo --}}
+                                        <span
+                                            class="badge rounded-pill text-bg-warning d-inline-flex align-items-center"
+                                            data-bs-toggle="tooltip" title="¡Stock bajo! Quedan pocas unidades.">
+                                            {{ $producto->stock }}
+                                            <i class="fa-solid fa-triangle-exclamation ms-1"></i>
+                                        </span>
+
+                                        @else
+                                        {{-- Estado 3: Stock Normal --}}
+                                        <span class="badge rounded-pill text-bg-success" data-bs-toggle="tooltip"
+                                            title="Unidades en stock">
+                                            {{ $producto->stock }}
+                                        </span>
+                                        @endif
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
@@ -446,7 +466,7 @@
                                 @endif
 
                                 <div x-show="imagePreview" class="position-relative text-center" style="display: none;">
-                                    <img :src="imagePreview"  class="img-thumbnail" loading="lazy"
+                                    <img :src="imagePreview" class="img-thumbnail" loading="lazy"
                                         style="width:100px;height:100px;object-fit:cover;">
                                     <button type="button"
                                         class="btn btn-danger btn-sm rounded-circle position-absolute top-0 start-100 translate-middle"
