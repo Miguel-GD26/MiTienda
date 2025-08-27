@@ -110,7 +110,7 @@
             <!-- Contenido Principal Super Admin -->
             @include('dashboard-content')
 
-        @elseif(auth()->user()->hasRole('admin'))
+        @elseif(auth()->user()->hasRole('admin', 'vendedor'))
             @if(auth()->user()->empresa)
                 <div class="dashboard-header">
                     <div class="d-flex align-items-center">

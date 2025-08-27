@@ -23,7 +23,7 @@ class PedidoController extends Controller
         
         // El controlador solo decide qué vista principal cargar.
         // El componente Livewire se encargará de la consulta y los filtros.
-        if (auth()->user()->hasRole(['super_admin', 'admin'])) {
+        if (auth()->user()->hasRole(['super_admin', 'admin', 'vendedor'])) {
             return view('pedido.admin'); // Vista contenedora del componente de admin
         }
         return view('pedido.cliente'); // Vista contenedora del componente de cliente
