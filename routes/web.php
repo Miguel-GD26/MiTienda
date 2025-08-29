@@ -108,8 +108,10 @@ Route::middleware('web')->group(function () {
             request()->session()->regenerateToken();
             return redirect('/login');
         })->name('logout');
-        Route::get('/perfil', [PerfilController::class, 'edit'])->name('perfil.edit');
-        Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
+        Route::get('perfil', function () {
+            return view('profile.index');})->name('perfil.edit');
+        // Route::get('/perfil', [PerfilController::class, 'edit'])->name('perfil.edit');
+        // Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
 
         // --- GESTIÓN DE LA TIENDA (Productos, Categorías, etc. - Panel Admin) ---
         Route::get('categorias', [CategoriaController::class, 'index'])->name('categorias.index');
@@ -137,9 +139,9 @@ Route::middleware('web')->group(function () {
 
         // Gestión de Clientes (Admins)
         Route::resource('clientes', ClienteController::class)->middleware('role:admin|super_admin')->only(['index', 'show', 'destroy']);
-        Route::get('/mis-clientes', [ClienteController::class, 'misClientes'])->name('clientes.mitienda');
+        Route::get('/mis-clientes', function () { return view('customers.my-customers');})->name('clientes.mitienda');
         // Gestión de Empresas (SOLO Super Admin)
-        Route::resource('empresas', EmpresaController::class);
+        Route::get('/empresas', function () {return view('empresas.index-livewire');})->name('empresas.index');
     });
 
 

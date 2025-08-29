@@ -59,11 +59,14 @@
     .top-list .top-list-item:last-child { border-bottom: none; }
     .top-list .item-rank { font-weight: 700; color: var(--text-body); margin-right: 1rem; width: 25px; }
     .top-list .item-value { margin-left: auto; font-weight: 600; color: var(--text-heading); }
+        .clickable-row {
+        cursor: pointer;
+    }
 </style>
 @endpush
 
 @section('contenido')
-<div class="app-content">
+{{-- <div class="app-content">
     <div class="container-fluid">
         @if(auth()->user()->hasRole('super_admin'))
             <!-- Cabecera Super Admin -->
@@ -162,7 +165,8 @@
             @endif
         @endif
     </div>
-</div>
+</div>--}}
+@livewire('dashboard')
 @endsection
 
 @push('scripts')

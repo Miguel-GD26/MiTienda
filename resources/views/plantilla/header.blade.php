@@ -29,7 +29,7 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
                         <li>
-                            <a class="dropdown-item" href="{{ route('perfil.edit') }}">
+                            <a class="dropdown-item" href="#" onclick="event.preventDefault(); Livewire.dispatch('openProfileModal')">
                                 <i class="fa-solid fa-user-cog me-2"></i> Perfil
                             </a>
                         </li>

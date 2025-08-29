@@ -83,6 +83,7 @@
     }
     </style>
 
+
     @stack('estilos')
     @vite(['resources/css/welcome.css'])
     @stack('styles')
@@ -93,6 +94,7 @@
     <div class="app-wrapper">
         <!-- Navbar Start -->
         <div class="container-fluid p-0 nav-bar">
+            @livewire('client-profile-manager')
             @include('welcome.navbar')
         </div>
         <!-- Navbar End -->

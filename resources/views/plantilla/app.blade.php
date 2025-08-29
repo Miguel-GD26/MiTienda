@@ -40,10 +40,11 @@
     <!--begin::App Wrapper-->
     <div class="app-wrapper">
       <!--begin::Header-->
+      @livewire('profile-manager')
       @include('plantilla.header')
       <!--end::Header-->
       <!--begin::Sidebar-->
-      @include('plantilla.menu')
+      @livewire('sidebar')
       <!--end::Sidebar-->
       <!--begin::App Main-->
       <main class="app-main">

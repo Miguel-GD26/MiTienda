@@ -12,12 +12,14 @@ use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use Livewire\Attributes\Url;
 
 class ProductManagement extends Component
 {
     use WithPagination, WithFileUploads;
 
     // --- PROPIEDADES PARA FILTROS Y PAGINACIÓN ---
+    #[Url(keep: true)]
     public $search = '';
     protected $paginationTheme = 'bootstrap';
     public $empresa_id_filter, $empresaSearch = '', $selectedEmpresaName = '';

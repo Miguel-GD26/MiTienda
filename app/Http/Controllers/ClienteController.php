@@ -25,11 +25,9 @@ class ClienteController extends Controller
         if (!$empresa) {
             return redirect()->route('dashboard')->with('error', 'No tienes una tienda asignada.');
         }
-
         
         $texto = $request->input('texto');
 
-       
         $clientes = User::query()
             ->where('empresa_id', $empresa->id) 
             ->when($texto, function ($query, $texto) {
@@ -45,30 +43,32 @@ class ClienteController extends Controller
     }
 
     public function misClientes(Request $request)
-    {
-        $user = Auth::user();
-        $empresa = $user->empresa;
+{
+    $user = Auth::user();
+    $empresa = $user->empresa;
 
-        if (!$empresa) {
-            return redirect()->route('dashboard')->with('error', 'No tienes una empresa asignada.');
-        }
-
-        $clienteIds = $empresa->clientes()->pluck('user_id');
-        
-        $query = User::whereIn('id', $clienteIds);
-
-        if ($request->filled('q')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->q . '%')
-                  ->orWhere('email', 'like', '%' . $request->q . '%');
-            });
-        }
-        
-        $clientes = $query->paginate(15);
-        
-        return view('clientes.mis-clientes', compact('clientes', 'empresa'));
+    if (!$empresa) {
+        return redirect()->route('dashboard')->with('error', 'No tienes una empresa asignada.');
     }
 
+    $clienteIds = $empresa->clientes()->pluck('user_id');
+    
+    $query = User::whereIn('id', $clienteIds);
+
+    // ##### CAMBIO AQUÍ: Usar 'texto' en lugar de 'q' #####
+    if ($request->filled('texto')) { 
+        $texto = $request->texto;
+        $query->where(function($q) use ($texto) {
+            $q->where('name', 'like', '%' . $texto . '%')
+              ->orWhere('email', 'like', '%' . $texto . '%');
+        });
+    }
+    
+    $clientes = $query->paginate(15);
+    
+    // Pasamos el texto de búsqueda a la vista para mantenerlo en el input
+    return view('clientes.mis-clientes', compact('clientes', 'empresa'))->with('texto', $request->texto);
+}
 
     public function show(User $cliente)
     {

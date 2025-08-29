@@ -1,4 +1,5 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top py-3 shadow-sm" style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top py-3 shadow-sm"
+    style="background: linear-gradient(135deg, #11998e, #38ef7d);">
     <div class="container-fluid">
 
         <!-- Logo a la izquierda -->
@@ -27,10 +28,11 @@
                 </a>
                 <div class="dropdown-menu dropdown-menu-end text-capitalize">
                     <div class="px-3 py-2">
-                        <span class="d-block">Hola, {{ Auth::user()->name }}</span>
+                        <span class="d-block">Hola, @livewire('username-display')</span>
                     </div>
                     <div class="dropdown-divider"></div>
-                    <a href="{{ route('perfil.edit') }}" class="dropdown-item"><i class="fa-solid fa-user-cog me-2"></i>
+                    <a href="#" onclick="event.preventDefault(); Livewire.dispatch('openClientProfileModal')"
+                        class="dropdown-item"><i class="fa-solid fa-user-cog me-2"></i>
                         Mi Perfil</a>
                     @if(auth()->user()->hasRole('cliente'))
                     <a class="dropdown-item" href="{{ route('cliente.pedidos') }}"><i
@@ -79,7 +81,7 @@
                         @endforeach
                     </div>
                 </div>
-                
+
                 @endif
                 @endauth
 
@@ -111,11 +113,11 @@
                     <!-- Menú Usuario (versión con texto) -->
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle px-3" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-circle-user"></i> {{ Auth::user()->name }}
+                            <i class="fa-solid fa-circle-user"></i> @livewire('username-display')
                         </a>
                         <div class="dropdown-menu dropdown-menu-end text-capitalize">
-                            <a href="{{ route('perfil.edit') }}" class="dropdown-item"><i
-                                    class="fa-solid fa-user-cog me-2"></i> Mi Perfil</a>
+                            <a href="#" onclick="event.preventDefault(); Livewire.dispatch('openClientProfileModal')"
+                                class="dropdown-item"><i class="fa-solid fa-user-cog me-2"></i> Mi Perfil</a>
                             @if(auth()->user()->hasRole('cliente'))
                             <a class="dropdown-item" href="{{ route('cliente.pedidos') }}"><i
                                     class="fa-solid fa-receipt me-2"></i> Mis Pedidos</a>

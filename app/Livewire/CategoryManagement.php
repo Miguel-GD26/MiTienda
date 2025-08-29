@@ -9,11 +9,12 @@ use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Exception;
+use Livewire\Attributes\Url;
 
 class CategoryManagement extends Component
 {
     use WithPagination;
-
+    #[Url(keep: true)]
     // --- PROPIEDADES PARA FILTROS Y PAGINACIÓN ---
     public $search = ''; // Búsqueda principal por nombre de categoría
     public $empresa_id_filter;
