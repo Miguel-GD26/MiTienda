@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request; // Importación necesaria
+use Illuminate\Database\QueryException; 
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -31,5 +32,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (QueryException $e, $request) {
+            if (str_contains($e->getMessage(), 'SQLSTATE[HY000] [2006] MySQL server has gone away')) {
+                return response()->view('errors.database-connecting', [], 503);
+            }
+        });
     })->create();
