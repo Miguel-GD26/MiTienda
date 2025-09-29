@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Component;
-use App\Http\Controllers\CartController; // <-- 1. Importa el CartController
-use App\Models\Producto;                 // <-- 2. Importa el modelo Producto
-use Illuminate\Http\Request; 
+use App\Http\Controllers\CartController;
+use App\Models\Producto;
+use Illuminate\Http\Request;
 
 class Login extends Component
 {
@@ -31,74 +31,80 @@ class Login extends Component
         $this->validateOnly($propertyName);
     }
 
-    public function authenticate(Request $request)
+    public function authenticate()
     {
-
         $credentials = $this->validate();
         $throttleKey = Str::lower($this->email) . '|' . request()->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
-            $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => "Demasiados intentos. Por favor, inténtalo de nuevo en {$seconds} segundos."
-            ]);
+            $this->dispatch('alert', ['type' => 'error', 'message' => "Demasiados intentos. Inténtalo en {$seconds} segundos."]);
             return;
         }
 
         if (!Auth::attempt($credentials)) {
             RateLimiter::hit($throttleKey);
-            $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => 'El correo electrónico o la contraseña no son correctos.'
-            ]);
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'El correo o la contraseña no son correctos.']);
             return;
         }
-        
-        RateLimiter::clear($throttleKey);
 
         $user = Auth::user();
 
         if (!$user->activo) {
             Auth::logout();
-            $this->dispatch('alert', [
-                'type' => 'error',
-                'message' => 'Su cuenta está inactiva. Por favor, contacte con el administrador.'
-            ]);
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Su cuenta está inactiva. Contacte al administrador.']);
             return;
         }
 
+        RateLimiter::clear($throttleKey);
         session()->regenerate();
 
+        $user = Auth::user();
+
+        // --- LÓGICA DE ÉXITO CORREGIDA ---
+
+        // 1. Lógica post-login (añadir al carrito)
+        $request = request();
+        $redirectToIntended = true; // Suponemos que queremos usar intended por defecto
+
         if ($request->session()->has('url.intended') && strpos($request->session()->get('url.intended'), 'add_product=') !== false) {
-            
-            // Extraemos el ID del producto de la URL guardada
             parse_str(parse_url($request->session()->get('url.intended'), PHP_URL_QUERY), $queryParams);
             $productId = $queryParams['add_product'] ?? null;
 
             if ($productId && $producto = Producto::find($productId)) {
-                // Creamos una instancia de CartController para usar su lógica de 'add'
                 $cartController = new CartController();
-                // Creamos una nueva Request para simular la cantidad (por defecto 1)
                 $addRequest = new Request(['quantity' => 1]);
-                // Llamamos al método 'add'
                 $cartController->add($addRequest, $producto);
+
+                // Si se añade al carrito, NO usamos intended, sino la URL de la tienda
+                $redirectToIntended = false;
             }
         }
+
+        // 2. Determinamos la URL de redirección final
+        $redirectUrl = '';
 
         if ($user->hasRole(['super_admin', 'admin', 'vendedor', 'repartidor'])) {
-            return $this->redirect('dashboard');
+            $redirectUrl = route('dashboard');
+        } elseif ($user->hasRole('cliente')) {
+            // La URL de la tienda tiene la máxima prioridad para los clientes
+            if (session()->has('url.store_before_login')) {
+                $redirectUrl = session()->pull('url.store_before_login');
+            } else {
+                // ¡ESTA ES LA CORRECCIÓN!
+                // Obtenemos la URL intended de la sesión, con un fallback.
+                $redirectUrl = session()->pull('url.intended', route('welcome'));
+            }
+        } else {
+            $redirectUrl = route('welcome');
         }
 
-        if ($user->hasRole('cliente')) {
-            if (session()->has('url.store_before_login')) {
-                $url = session()->pull('url.store_before_login');
-                return $this->redirect($url);
-            }
-            return redirect()->intended(route('welcome'));
-        }
-        
-        return $this->redirectRoute('welcome');
+        // 3. Despachamos el evento al frontend con los datos necesarios
+        $this->dispatch(
+            'login-success',
+            redirectUrl: $redirectUrl,
+            userName: $user->name
+        );
     }
 
     public function render()

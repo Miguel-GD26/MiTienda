@@ -29,58 +29,58 @@
         rel="stylesheet">
 
     <style>
-    .navbar-brand-name {
-        font-family: 'Raleway', sans-serif;
-        font-weight: 400;
-        font-size: 1.2rem;
-        letter-spacing: 0.5px;
-        margin-left: 12px;
-    }
+        .navbar-brand-name {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 400;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+            margin-left: 12px;
+        }
 
 
-    .navbar-logo {
-        height: 60px;
-        transition: height 0.2s ease-in-out;
-        filter: drop-shadow(0 0 1px white);
-    }
-
-
-    .navbar-nav .nav-link {
-        font-weight: 500;
-        font-size: 0.95rem;
-    }
-
-    @media (min-width: 992px) {
         .navbar-logo {
-            height: 80px;
+            height: 60px;
+            transition: height 0.2s ease-in-out;
+            filter: drop-shadow(0 0 1px white);
         }
-    }
 
-    @media (max-width: 991.98px) {
 
-        #navbarCollapse,
-        .navbar-dark .d-lg-none .nav-link {
-            color: rgba(255, 255, 255, 1) !important;
-            font-weight: normal;
+        .navbar-nav .nav-link {
+            font-weight: 500;
+            font-size: 0.95rem;
         }
-    }
 
-    .navbar {
-        background: linear-gradient(175deg, #11998e, #38ef7d);
-        transition: background 0.3s ease-in-out;
-    }
+        @media (min-width: 992px) {
+            .navbar-logo {
+                height: 80px;
+            }
+        }
 
-    /* Links del navbar */
-    .navbar .nav-link.active {
-        color: #124557ff !important;
-        transition: color 0.3s, transform 0.2s;
-    }
+        @media (max-width: 991.98px) {
 
-    .navbar .nav-link:hover {
-        color: #043d39ff !important;
-        transition: color 0.3s, transform 0.2s;
-        transform: scale(1.05);
-    }
+            #navbarCollapse,
+            .navbar-dark .d-lg-none .nav-link {
+                color: rgba(255, 255, 255, 1) !important;
+                font-weight: normal;
+            }
+        }
+
+        .navbar {
+            background: linear-gradient(175deg, #11998e, #38ef7d);
+            transition: background 0.3s ease-in-out;
+        }
+
+        /* Links del navbar */
+        .navbar .nav-link.active {
+            color: #124557ff !important;
+            transition: color 0.3s, transform 0.2s;
+        }
+
+        .navbar .nav-link:hover {
+            color: #043d39ff !important;
+            transition: color 0.3s, transform 0.2s;
+            transform: scale(1.05);
+        }
     </style>
 
 
@@ -123,6 +123,17 @@
     <!-- Alpine.js (si lo usas) -->
     <!-- <script src="//unpkg.com/alpinejs" defer></script> -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('livewire:init', () => {
+            let refreshing = false;
+            Livewire.on('page-expired', (event) => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
+            });
+        });
+    </script>
     @stack('scripts')
 </body>
 
